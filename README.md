@@ -6,17 +6,17 @@ Default speeds:
 
 Range I (field): 0 - 36 kph forwards, 0 - 20 kph reverse
 
-Range II (road): 0 - 50 kph forwards, 0 - 38 kph reverse
+Range II (road): 0 - 53 kph forwards, 0 - 38 kph reverse
 
 
-In the transmission where you would normally set up gears or groups in <transmission> for a geared vehicle, do:
+In the transmission where you would normally set up gears or groups in <transmission> for a geared vehicle, add:
 ```
 <transmission .. >
-  <varioRanges forwardSpeedRange1="" forwardSpeedRange2="" backwardSpeedRange1="" backwardSpeedRange2="" defaultRange=""/>
+  <varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38" defaultRange="2"/>
 </transmission>
 ```
 
-Example usage:
+Example usage on base game Fendt 700 Vario:
   ```
   <motorConfigurations>
     <motorConfiguration name="720 Vario" hp="203" price="0" consumerConfigurationIndex="1">
