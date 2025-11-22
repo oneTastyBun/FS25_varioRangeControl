@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="104">
+    <author>oneTastyBun</author>
+    <version>1.0.0.0</version>
+
+    <title>
+        <en>Vario Range Control</en>
+    </title>
+
+    <description>
+        <en><![CDATA[Adds Fendt Vario style I / II speed ranges to CVT transmissions. Mods must be prepared to use this script.]]></en>
+    </description>
+
+    <iconFilename>icon.png</iconFilename>
+
+    <multiplayer supported="true"/>
+
+    <extraSourceFiles>
+        <sourceFile filename="scripts/VarioRangeControl_register.lua"/>
+    </extraSourceFiles>
+
+    <actions>
+        <action name="VARIO_TOGGLE_RANGE" />
+    </actions>
+
+    <inputBinding>
+        <actionBinding action="VARIO_TOGGLE_RANGE">
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_lshift KEY_1" />
+        </actionBinding>
+    </inputBinding>
+
+    <l10n>
+        <text name="input_VARIO_RANGE_I">
+            <en>Change Vario speed range</en>
+        </text>
+        <text name="input_VARIO_RANGE_II">
+            <en>Change Vario speed range</en>
+        </text>
+		<text name="input_VARIO_TOGGLE_RANGE">
+			<en>Change Vario speed range</en>
+		</text>
+    </l10n>
+</modDesc>
