@@ -8,7 +8,7 @@ XML setup: (any value can be omitted)
   <varioRanges defaultRange="2" shiftSpeedMax="2.5">
     <range1 maxForwardSpeed="36" maxBackwardSpeed="20" minForwardGearRatio="25.0" maxForwardGearRatio="350" minBackwardGearRatio="25.0" maxBackwardGearRatio="350" />
 	<range2 maxForwardSpeed="53" maxBackwardSpeed="38" minForwardGearRatio="13" maxForwardGearRatio="300" minBackwardGearRatio="13" maxBackwardGearRatio="300" />
-</varioRanges>
+  </varioRanges>
 </transmission>
 ```
 
