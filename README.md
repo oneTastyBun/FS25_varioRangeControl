@@ -1,5 +1,5 @@
 # FS25_varioRangeControl
-Simple little mod for Farming Simulator 25. Optionally adds two (I/II) speed ranges to CVT transmissions for tractors. (requires xml setup) Intended to be used with Fendt Vario tractors that have a I (field) / II (road) speed range control button in real life. The ranges can currently be shifted at any speed with no clutch input. Requiring the user to stop or limit the speed, and press in the clutch to shift is planned.
+Optionally adds two speed ranges (I/II) to CVT transmissions for tractors. Requires vehicle XML preparation. Intended to be used with Fendt Vario tractors that have a I (field) / II (road) speed range control button in real life. By default you must stop in order to shift ranges, as this is how I drive a Vario IRL. The max allowed speed for shifting can be configured per vehicle in xml. The keybind is a toggle and can be configured in the controls menu like normal.
 
 
 Default speeds:
@@ -9,10 +9,10 @@ Range I (field): 0 - 36 kph forwards, 0 - 20 kph reverse
 Range II (road): 0 - 53 kph forwards, 0 - 38 kph reverse
 
 
-In the transmission where you would normally set up gears or groups in <transmission> for a geared vehicle, add:
+In the vehicle xml where you would normally set up gears or groups in <transmission>, add:
 ```
 <transmission .. >
-  <varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38" defaultRange="2"/>
+  <varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38" defaultRange="2" shiftSpeedMax="2.5"/>
 </transmission>
 ```
 
@@ -29,7 +29,7 @@ Example usage on base game Fendt 700 Vario:
         <torque normRpm="1" torque="0.72"/>
       </motor>
       <transmission minForwardGearRatio="10.3" maxForwardGearRatio="320" minBackwardGearRatio="16.7" maxBackwardGearRatio="320" name="$l10n_info_transmission_cvt">
-        <varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38" defaultRange="2"/>
+        <varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38" defaultRange="2" shiftSpeedMax="2.5"/>
       </transmission>
     </motorConfiguration>
   </motorConfigurations>
