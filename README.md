@@ -14,7 +14,6 @@ XML setup: (any value can be omitted)
 
 Example usage on base game Fendt 700 Vario, where some values are omitted:
   ```
-<motorConfigurations>
   <motorConfiguration name="720 Vario" hp="203" price="0" consumerConfigurationIndex="1">
     <motor torqueScale="1.11" minRpm="650" maxRpm="1700" maxForwardSpeed="53" maxBackwardSpeed="33" brakeForce="8" lowBrakeForceScale="0.1" lowBrakeForceSpeedLimit="1" ptoMotorRpmRatio="3" dampingRateScale="1">
 	  <torque normRpm="0.45" torque="0.9"/>
@@ -31,7 +30,6 @@ Example usage on base game Fendt 700 Vario, where some values are omitted:
       </varioRanges>
     </transmission>
   </motorConfiguration>
-</motorConfigurations>
 ```
 
 If values are omitted, the following data applies:
