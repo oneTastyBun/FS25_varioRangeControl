@@ -34,8 +34,13 @@ Example usage on base game Fendt 700 Vario, where some values are omitted:
 
 If values are omitted, the following data applies:
 
+
 Default range: 2
+
 Max speed for shifting: 2.5 kph
+
 Default speeds in range I (field): 0 - 36 kph forwards, 0 - 20 kph reverse
+
 Default speeds in range II (road): 0 - 53 kph forwards, 0 - 38 kph reverse
-All gear ratios: As defined in <transmission>
+
+Default gear ratios: As defined in vehicle transmission
