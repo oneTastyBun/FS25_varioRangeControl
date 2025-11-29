@@ -1,12 +1,26 @@
 -- scripts/VarioRangeControl.lua
 -- FS25: Vario Range Control specialization
 --
--- in vehicle.xml do:
+-- in vehicle.xml, do:
 --
 --	<transmission>
---		<varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38"/>
+--		<varioRanges forwardSpeedRange1="36" forwardSpeedRange2="53" backwardSpeedRange1="20" backwardSpeedRange2="38" defaultRange="2" shiftSpeedMax="2.5"/>
 --	</transmission>
 --
+-- idea: add min/max gear ratio in each range maybe
+-- not sure if there will be a noticeable gameplay difference, since the FS CVT always finds the perfect rpm with no power loss etc
+-- IRL: the tractor feels more sluggish and "rumbly" if you are in range II under high load at slow speeds. you can feel it
+--
+-- idea: require clutch press/neutral active and a certain max speed to shift ranges, like irl
+-- example pulled from fendt favorit 900 gen 2 workshop manual:
+-- I->II and II -> I is allowed if: speed 0-2.5km/h + neutral active/clutch pressed
+-- I->II is allowed if: speed above 5km/h + neutral active/clutch pressed + load not too big. (max. 150 bar in vario high-pressure circuit)
+--
+-- issue: clutch or neutral do not exist for CVT transmissions in FS25
+-- requiring pressing the clutch key would feel unnatural in the game, since nothing happens (no free-rolling or able to rev the engine)
+-- this would require adding a clutch/neutral feature for CVT first
+--
+-- feature update 27/11/2025: implemented configurable max speed for range shift
 
 VarioRangeControl = {}
 
@@ -18,11 +32,14 @@ function VarioRangeControl.initSpecialization()
     local schema = Vehicle.xmlSchema
     schema:setXMLSpecializationType("VarioRangeControl")
 
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#forwardSpeedRange1", "Max forward speed in range I (km/h)")
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#forwardSpeedRange2", "Max forward speed in range II (km/h)")
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#backwardSpeedRange1", "Max backward speed in range I (km/h)")
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#backwardSpeedRange2", "Max backward speed in range II (km/h)")
+    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#forwardSpeedRange1", "Max forward speed in range I (km/h)", 36)
+    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#forwardSpeedRange2", "Max forward speed in range II (km/h)", 53)
+    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#backwardSpeedRange1", "Max backward speed in range I (km/h)", 20)
+    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#backwardSpeedRange2", "Max backward speed in range II (km/h)", 38)
     schema:register(XMLValueType.INT,   "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#defaultRange", "Default range (1 = I, 2 = II)", 2)
+
+    -- 27/11/2025 update
+    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#shiftSpeedMax", "Max vehicle speed for range shift (km/h)", 2.5)
 
     schema:setXMLSpecializationType()
 end
@@ -44,29 +61,19 @@ function VarioRangeControl.registerOverwrittenFunctions(vehicleType)
     SpecializationUtil.registerOverwrittenFunction(vehicleType, "getGearInfoToDisplay", VarioRangeControl.getGearInfoToDisplay)
 end
 
-function VarioRangeControl.getVarioRangeSpeedsFromXML(xmlFile, spec, baseKey)
-    baseKey = baseKey or "vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges"
+function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
+	-- could use maxForwardSpeed/maxBackwardSpeed, but if you are using this script you _should_ set everything in <varioRanges> anyway
+	
+	-- defaults are based on data from official user manual / repair manual for fendt 900 vario gen 2
+    spec.forwardSpeedRange1 = xmlFile:getValue(key.."#forwardSpeedRange1", 36)
+    spec.backwardSpeedRange1 = xmlFile:getValue(key.."#backwardSpeedRange1", 20)
+    spec.forwardSpeedRange2 = xmlFile:getValue(key.."#forwardSpeedRange2", 53)
+    spec.backwardSpeedRange2 = xmlFile:getValue(key.."#backwardSpeedRange2", 38)
+    local defaultRange = xmlFile:getValue(key.."#defaultRange", 2)
+    spec.shiftSpeedMax  = xmlFile:getValue(key.."#shiftSpeedMax", 2.5) -- 27/11/2025 update
 
-    local forwardSpeedRange1 = xmlFile:getValue(baseKey .. "#forwardSpeedRange1")
-    local backwardSpeedRange1 = xmlFile:getValue(baseKey .. "#backwardSpeedRange1")
-    local forwardSpeedRange2 = xmlFile:getValue(baseKey .. "#forwardSpeedRange2")
-    local backwardSpeedRange2 = xmlFile:getValue(baseKey .. "#backwardSpeedRange2")
-
-    if forwardSpeedRange1 ~= nil then
-        spec.range1ForwardSpeed = forwardSpeedRange1
-    end
-
-    if forwardSpeedRange2 ~= nil then
-        spec.forwardSpeedRange2 = forwardSpeedRange2
-    end
-
-    if backwardSpeedRange1 ~= nil then
-        spec.backwardSpeedRange1 = backwardSpeedRange1
-    end
-
-    if backwardSpeedRange2 ~= nil then
-        spec.backwardSpeedRange2 = backwardSpeedRange2
-    end
+	-- initialize spec.currentRange
+    spec.currentRange = math.clamp(defaultRange, 1, 2)
 end
 
 function VarioRangeControl:onLoad(savegame)
@@ -76,22 +83,15 @@ function VarioRangeControl:onLoad(savegame)
         spec = self.spec_varioRangeControl
     end
 
-    local transmissionKey = "vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges"
-    if not self.xmlFile:hasProperty(transmissionKey) then
+	-- check <varioRanges> exists in the vehicle xml, otherwise exit
+    local key = "vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges"
+    if not self.xmlFile:hasProperty(key) then
         self.spec_varioRangeControl = nil
         return
     end
-	
-	-- fallback speeds if they are not set in xml
-	-- could use maxForwardSpeed/maxBackwardSpeed as fallback, but if you are using this script you _should_ set everything in <varioRanges> anyway
-    spec.forwardSpeedRange1 = 36
-    spec.backwardSpeedRange1 = 20
-    spec.forwardSpeedRange2 = 53
-    spec.backwardSpeedRange2 = 38
 
-    VarioRangeControl.getVarioRangeSpeedsFromXML(self.xmlFile, spec, transmissionKey)
-
-    spec.currentRange = math.clamp(self.xmlFile:getValue(transmissionKey .. "#defaultRange", 2) or 2, 1, 2)
+	-- load configuration data from vehicle XML
+    VarioRangeControl.loadVarioRangesFromXML(self.xmlFile, key, spec)
 
     spec.actionEvents = {}
     spec.varioActionEventId = nil
@@ -119,7 +119,7 @@ function VarioRangeControl:getSpeedLimit(superFunc, onlyIfWorking)
     local movingDirection = self.movingDirection or 1
     local isReverse = movingDirection < 0
 
-    local forwardLimit = (spec.currentRange == 1) and spec.range1ForwardSpeed or spec.forwardSpeedRange2
+    local forwardLimit = (spec.currentRange == 1) and spec.forwardSpeedRange1  or spec.forwardSpeedRange2
     local backwardLimit = (spec.currentRange == 1) and spec.backwardSpeedRange1 or spec.backwardSpeedRange2
     local rangeLimit = isReverse and backwardLimit or forwardLimit
     if rangeLimit ~= nil and rangeLimit > 0 then
@@ -151,6 +151,23 @@ function VarioRangeControl:setVarioRange(rangeIndex)
     if spec.currentRange ~= rangeIndex then
         spec.currentRange = rangeIndex
     end
+end
+
+-- 27/11/2025 update
+function VarioRangeControl.canShiftRange(self)
+    local spec = self.spec_varioRangeControl
+    if spec == nil then
+        return false
+    end
+
+    local speedKmh = self:getLastSpeed()
+    local maxSpeed = spec.shiftSpeedMax or 1
+
+    if speedKmh > maxSpeed then
+        return false
+    end
+	
+	return true
 end
 
 function VarioRangeControl:onRegisterActionEvents(isActiveForInput, isActiveForInputIgnoreSelection)
@@ -189,6 +206,14 @@ end
 
 function VarioRangeControl.actionEventToggleRange(self, actionName, inputValue, callbackState, isAnalog)
     if inputValue == 0 then
+        return
+    end
+
+    -- 27/11/2025 NEW: only allow shift when speed is within allowed range
+    if not VarioRangeControl.canShiftRange(self) then
+        if g_currentMission ~= nil then
+            g_currentMission:showBlinkingWarning("Unable to change Vario range: Slow down!", 2000)
+        end
         return
     end
 
@@ -238,3 +263,4 @@ function VarioRangeControl:getGearInfoToDisplay(superFunc)
 
     return gearName, gearGroupName, gearsAvailable, isAutomatic, prevGearName, nextGearName, prevPrevGearName, nextNextGearName, isGearChanging, showNeutralWarning
 end
+
