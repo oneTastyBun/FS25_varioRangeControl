@@ -8,13 +8,12 @@ XML setup: (any value can be omitted)
   <varioRanges defaultRange="2" shiftSpeedMax="2.5">
     <range1 maxForwardSpeed="36" maxBackwardSpeed="20" minForwardGearRatio="25.0" maxForwardGearRatio="350" minBackwardGearRatio="25.0" maxBackwardGearRatio="350" />
 	<range2 maxForwardSpeed="53" maxBackwardSpeed="38" minForwardGearRatio="13" maxForwardGearRatio="300" minBackwardGearRatio="13" maxBackwardGearRatio="300" />
-</varioRanges>
+  </varioRanges>
 </transmission>
 ```
 
 Example usage on base game Fendt 700 Vario, where some values are omitted:
   ```
-<motorConfigurations>
   <motorConfiguration name="720 Vario" hp="203" price="0" consumerConfigurationIndex="1">
     <motor torqueScale="1.11" minRpm="650" maxRpm="1700" maxForwardSpeed="53" maxBackwardSpeed="33" brakeForce="8" lowBrakeForceScale="0.1" lowBrakeForceSpeedLimit="1" ptoMotorRpmRatio="3" dampingRateScale="1">
 	  <torque normRpm="0.45" torque="0.9"/>
@@ -31,13 +30,17 @@ Example usage on base game Fendt 700 Vario, where some values are omitted:
       </varioRanges>
     </transmission>
   </motorConfiguration>
-</motorConfigurations>
 ```
 
 If values are omitted, the following data applies:
 
+
 Default range: 2
+
 Max speed for shifting: 2.5 kph
+
 Default speeds in range I (field): 0 - 36 kph forwards, 0 - 20 kph reverse
+
 Default speeds in range II (road): 0 - 53 kph forwards, 0 - 38 kph reverse
-All gear ratios: As defined in <transmission>
+
+Default gear ratios: As defined in vehicle transmission
