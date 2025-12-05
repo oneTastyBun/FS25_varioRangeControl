@@ -231,6 +231,22 @@ function VarioRangeControl.applyGearRatios(self)
     end
 
     local motor = motorizedSpec.motor
+	
+	-- 05/12/2025 fix
+    -- Cache original base ratios once
+    if spec.baseMinForwardGearRatio == nil then
+        spec.baseMinForwardGearRatio  = motor.minForwardGearRatioOrigin or motor.minForwardGearRatio
+        spec.baseMaxForwardGearRatio  = motor.maxForwardGearRatioOrigin or motor.maxForwardGearRatio
+        spec.baseMinBackwardGearRatio = motor.minBackwardGearRatioOrigin or motor.minBackwardGearRatio
+        spec.baseMaxBackwardGearRatio = motor.maxBackwardGearRatioOrigin or motor.maxBackwardGearRatio
+
+        -- If range2 is not explicitly configured, treat base ratios as its config
+        spec.range2MinForwardGearRatio  = spec.range2MinForwardGearRatio  or spec.baseMinForwardGearRatio
+        spec.range2MaxForwardGearRatio  = spec.range2MaxForwardGearRatio  or spec.baseMaxForwardGearRatio
+        spec.range2MinBackwardGearRatio = spec.range2MinBackwardGearRatio or spec.baseMinBackwardGearRatio
+        spec.range2MaxBackwardGearRatio = spec.range2MaxBackwardGearRatio or spec.baseMaxBackwardGearRatio
+    end
+	
     local rangeIndex = spec.currentRange or 2
 
     local minF, maxF, minB, maxB
