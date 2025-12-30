@@ -70,6 +70,8 @@ function VarioRangeControl.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onPostLoad", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onDelete", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onRegisterActionEvents", VarioRangeControl)
+	SpecializationUtil.registerEventListener(vehicleType, "onReadStream", VarioRangeControl)
+	SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", VarioRangeControl)
 end
 
 function VarioRangeControl.registerOverwrittenFunctions(vehicleType)
@@ -151,6 +153,34 @@ end
 function VarioRangeControl:onDelete()
     self.spec_varioRangeControl = nil
 end
+
+-- 30/12/2025: MP
+function VarioRangeControl:onWriteStream(streamId, connection)
+    local spec = self.spec_varioRangeControl
+    if spec == nil then
+        streamWriteBool(streamId, false)
+        return
+    end
+
+    streamWriteBool(streamId, true)
+    streamWriteUIntN(streamId, spec.currentRange or 2, 2)
+end
+
+function VarioRangeControl:onReadStream(streamId, connection)
+    if not streamReadBool(streamId) then
+        return
+    end
+
+    local spec = self.spec_varioRangeControl
+    if spec == nil then
+        return
+    end
+
+    spec.currentRange = streamReadUIntN(streamId, 2)
+
+    VarioRangeControl.applyGearRatios(self)
+end
+
 
 function VarioRangeControl:getSpeedLimit(superFunc, onlyIfWorking)
     local limit, doCheckSpeedLimit = superFunc(self, onlyIfWorking)
@@ -333,10 +363,18 @@ function VarioRangeControl.actionEventToggleRange(self, actionName, inputValue, 
     end
 
     local current = self:getVarioRange()
-    local newRange = (current == 1) and 2 or 1
+	local newRange = (current == 1) and 2 or 1
+	
+	self:setVarioRange(newRange)
 
-    self:setVarioRange(newRange)
-    VarioRangeControl.updateActionEventText(self)
+	-- 30/12/2025: MP - client sends request to server; server broadcasts and applies
+	if g_server ~= nil then
+		g_server:broadcastEvent(VarioRangeControlEvent.new(self, newRange), nil, nil, self)
+	else
+		g_client:getServerConnection():sendEvent(VarioRangeControlEvent.new(self, newRange))
+	end
+
+	VarioRangeControl.updateActionEventText(self)
 end
 
 -- display F1 help menu action text

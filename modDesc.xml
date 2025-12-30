@@ -8,15 +8,16 @@
     </title>
 
     <description>
-        <en><![CDATA[Adds Fendt Vario style I / II speed ranges to CVT transmissions. Mods must be prepared to use this script.]]></en>
+        <en><![CDATA[Adds Fendt Vario style I / II speed ranges to CVT transmissions. Vehicles must be prepared to use this script.]]></en>
     </description>
 
-    <iconFilename>icon.png</iconFilename>
+    <iconFilename>icon.dds</iconFilename>
 
     <multiplayer supported="true"/>
 
     <extraSourceFiles>
         <sourceFile filename="scripts/VarioRangeControl_register.lua"/>
+		<sourceFile filename="scripts/VarioRangeControlEvent.lua"/>
     </extraSourceFiles>
 
     <actions>
