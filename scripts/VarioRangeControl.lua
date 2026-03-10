@@ -134,7 +134,59 @@ function VarioRangeControl:onLoad(savegame)
     end
 
 	-- check <varioRanges> exists in the vehicle xml, otherwise exit
-    local key = "vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges"
+	--
+    -- self.configurations["motor"] is 1-based
+    -- motorConfiguration(?) is 0-based in XML
+    local motorConfigIndex = Utils.getNoNil(self.configurations["motor"], 1) - 1
+
+    local key = string.format(
+        "vehicle.motorized.motorConfigurations.motorConfiguration(%d).transmission.varioRanges",
+        motorConfigIndex
+    )
+
+    -- fallback
+    if not self.xmlFile:hasProperty(key) then
+        key = "vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges"
+    end
+	
+	-- exit
+    if not self.xmlFile:hasProperty(key) then
+        self.spec_varioRangeControl = nil
+        return
+    end
+	--
+
+	-- load configuration data from vehicle XML
+    VarioRangeControl.loadVarioRangesFromXML(self.xmlFile, key, spec)
+
+    spec.actionEvents = {}
+    spec.varioActionEventId = nil
+end
+
+function VarioRangeControl:onLoad(savegame)
+    local spec = self.spec_varioRangeControl
+    if spec == nil then
+        self.spec_varioRangeControl = {}
+        spec = self.spec_varioRangeControl
+    end
+
+	-- check <varioRanges> exists in the vehicle xml, otherwise exit
+	--
+    -- self.configurations["motor"] is 1-based
+    -- motorConfiguration(?) is 0-based in XML
+    local motorConfigIndex = Utils.getNoNil(self.configurations["motor"], 1) - 1
+
+    local key = string.format(
+        "vehicle.motorized.motorConfigurations.motorConfiguration(%d).transmission.varioRanges",
+        motorConfigIndex
+    )
+
+    -- fallback to configuration 0 if the selected motor config does not define varioRanges
+    if not self.xmlFile:hasProperty(key) then
+        key = "vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges"
+    end
+
+    -- if still missing, disable the specialization for this vehicle
     if not self.xmlFile:hasProperty(key) then
         self.spec_varioRangeControl = nil
         return
@@ -410,6 +462,7 @@ function VarioRangeControl.updateActionEventText(self)
 
     g_inputBinding:setActionEventText(spec.varioActionEventId, label)
 end
+--
 
 -- display the current vario range on the speedometer HUD
 function VarioRangeControl:getGearInfoToDisplay(superFunc)
@@ -429,6 +482,7 @@ function VarioRangeControl:getGearInfoToDisplay(superFunc)
 
     return gearName, gearGroupName, gearsAvailable, isAutomatic, prevGearName, nextGearName, prevPrevGearName, nextNextGearName, isGearChanging, showNeutralWarning
 end
+--
 
 -- 10/03/2026: save/load range to vehicles.xml
 function VarioRangeControl.loadRangeFromSavegameXML(self, xmlFile, key)
@@ -458,4 +512,26 @@ end
 
 function VarioRangeControl:saveToXMLFile(xmlFile, key, usedModNames)
     VarioRangeControl.writeRangeToSavegameXML(self, xmlFile, key)
+end
+--
+
+function VarioRangeControl.getActiveMotorConfigurationIndex(self)
+    local motorizedSpec = self.spec_motorized
+    if motorizedSpec ~= nil then
+        -- try the most likely places first
+        if motorizedSpec.motorConfigurationIndex ~= nil then
+            return motorizedSpec.motorConfigurationIndex
+        end
+
+        if motorizedSpec.currentMotorConfigurationIndex ~= nil then
+            return motorizedSpec.currentMotorConfigurationIndex
+        end
+    end
+
+    -- generic fallback: configuration table used by many vehicles
+    if self.configurations ~= nil and self.configurations.motor ~= nil then
+        return self.configurations.motor - 1
+    end
+
+    return 0
 end
