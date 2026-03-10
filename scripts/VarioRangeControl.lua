@@ -25,6 +25,7 @@
 --
 -- feature update 27/11/2025: implemented configurable max speed for range shift
 -- feature update 29/11/2025: implemented configurable gear ratios in each range
+-- feature update 10/03/2026: implemented persistence across savegame sessions
 
 VarioRangeControl = {}
 
@@ -58,6 +59,13 @@ function VarioRangeControl.initSpecialization()
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#shiftSpeedMax", "Max vehicle speed for range shift (km/h)", 2.5)
 
     schema:setXMLSpecializationType()
+	
+	-- 10/03/2026 update
+    -- savegame schema registration
+	local schemaSavegame = Vehicle.xmlSchemaSavegame
+	schemaSavegame:setXMLSpecializationType("FS25_varioRangeControl.varioRangeControl")
+	schemaSavegame:register(XMLValueType.INT, "vehicles.vehicle(?).FS25_varioRangeControl.varioRangeControl#currentRange", "Current vario range", 2)
+	schemaSavegame:setXMLSpecializationType()
 end
 
 function VarioRangeControl.registerFunctions(vehicleType)
@@ -70,8 +78,8 @@ function VarioRangeControl.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onPostLoad", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onDelete", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onRegisterActionEvents", VarioRangeControl)
-	SpecializationUtil.registerEventListener(vehicleType, "onReadStream", VarioRangeControl)
-	SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", VarioRangeControl)
+    SpecializationUtil.registerEventListener(vehicleType, "onReadStream", VarioRangeControl)
+    SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", VarioRangeControl)
 end
 
 function VarioRangeControl.registerOverwrittenFunctions(vehicleType)
@@ -143,6 +151,12 @@ function VarioRangeControl:onPostLoad(savegame)
     local spec = self.spec_varioRangeControl
     if spec == nil then
         return
+    end
+	
+	-- 10/03/2026: save/load range to vehicles.xml
+    if savegame ~= nil and not savegame.resetVehicles then
+        local key = savegame.key .. ".FS25_varioRangeControl.varioRangeControl"
+        VarioRangeControl.loadRangeFromSavegameXML(self, savegame.xmlFile, key)
     end
 
     -- 29/11/2025: apply initial gear ratios for default range
@@ -417,3 +431,32 @@ function VarioRangeControl:getGearInfoToDisplay(superFunc)
     return gearName, gearGroupName, gearsAvailable, isAutomatic, prevGearName, nextGearName, prevPrevGearName, nextNextGearName, isGearChanging, showNeutralWarning
 end
 
+-- 10/03/2026: save/load range to vehicles.xml
+function VarioRangeControl.loadRangeFromSavegameXML(self, xmlFile, key)
+    local spec = self.spec_varioRangeControl
+    if spec == nil or xmlFile == nil or key == nil then
+        return false
+    end
+
+    local savedRange = xmlFile:getValue(key .. "#currentRange")
+    if savedRange ~= nil then
+        self:setVarioRange(savedRange)
+        return true
+    end
+
+    return false
+end
+
+function VarioRangeControl.writeRangeToSavegameXML(self, xmlFile, key)
+    local spec = self.spec_varioRangeControl
+    if spec == nil or xmlFile == nil or key == nil then
+        return false
+    end
+
+    xmlFile:setValue(key .. "#currentRange", spec.currentRange or 2)
+    return true
+end
+
+function VarioRangeControl:saveToXMLFile(xmlFile, key, usedModNames)
+    VarioRangeControl.writeRangeToSavegameXML(self, xmlFile, key)
+end

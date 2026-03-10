@@ -1,5 +1,4 @@
 -- scripts/VarioRangeControl_register.lua
--- Registers the specialization and injects it into the default 'tractor' vehicle type.
 
 -- Register specialization
 g_specializationManager:addSpecialization(
