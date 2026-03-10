@@ -1,9 +1,8 @@
 # FS25_varioRangeControl
 Optionally adds two speed ranges (I/II) to CVT transmissions for tractors. Requires vehicle XML preparation. Intended to be used with Fendt Vario tractors that have a I (field) / II (road) speed range control button in real life. By default you must stop in order to shift ranges, as this is how I drive a Vario IRL. The max allowed speed for shifting can be configured per vehicle in xml. The keybind is a toggle and can be configured in the controls menu like normal.
 
-
-XML setup: (any value can be omitted)
-```
+### XML format:
+```xml
 <transmission .. >
   <varioRanges defaultRange="2" shiftSpeedMax="2.5">
     <range1 maxForwardSpeed="36" maxBackwardSpeed="20" minForwardGearRatio="25.0" maxForwardGearRatio="350" minBackwardGearRatio="25.0" maxBackwardGearRatio="350" />
@@ -12,8 +11,9 @@ XML setup: (any value can be omitted)
 </transmission>
 ```
 
-Example usage on base game Fendt 700 Vario, where some values are omitted:
-  ```
+### Example usage:
+Not all values need to be defined.
+  ```xml
   <motorConfiguration name="720 Vario" hp="203" price="0" consumerConfigurationIndex="1">
     <motor torqueScale="1.11" minRpm="650" maxRpm="1700" maxForwardSpeed="53" maxBackwardSpeed="33" brakeForce="8" lowBrakeForceScale="0.1" lowBrakeForceSpeedLimit="1" ptoMotorRpmRatio="3" dampingRateScale="1">
 	  <torque normRpm="0.45" torque="0.9"/>
@@ -35,7 +35,7 @@ Example usage on base game Fendt 700 Vario, where some values are omitted:
 If values are omitted, the following data applies:
 
 
-Default range: 2
+Default range: 2 (II)
 
 Max speed for shifting: 2.5 kph
 
