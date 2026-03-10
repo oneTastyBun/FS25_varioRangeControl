@@ -31,7 +31,7 @@ function VarioRangeControlRegister:register(name)
             end
         end
 
-        if motorized and vehicleType.name == "tractor" then
+        if motorized then
             if not hasVario then
                 print("varioRangeControl: attaching varioRangeControl to vehicleType '" .. tostring(vehicleType.name) .. "'")
                 g_vehicleTypeManager:addSpecialization(
