@@ -191,8 +191,8 @@ function VarioRangeControl:onReadStream(streamId, connection)
     end
 
     spec.currentRange = streamReadUIntN(streamId, 2)
-
     VarioRangeControl.applyGearRatios(self)
+    VarioRangeControl.updateActionEventText(self)
 end
 
 
@@ -398,13 +398,12 @@ function VarioRangeControl.updateActionEventText(self)
         return
     end
 
-    local label
-    if spec.currentRange == 1 then
-        if g_i18n ~= nil and g_i18n:hasText("input_VARIO_RANGE_I") then
+    local label = (spec.currentRange == 1) and "Range I" or "Range II"
+
+    if g_i18n ~= nil then
+        if spec.currentRange == 1 and g_i18n:hasText("input_VARIO_RANGE_I") then
             label = g_i18n:getText("input_VARIO_RANGE_I")
-        end
-    else
-        if g_i18n ~= nil and g_i18n:hasText("input_VARIO_RANGE_II") then
+        elseif spec.currentRange == 2 and g_i18n:hasText("input_VARIO_RANGE_II") then
             label = g_i18n:getText("input_VARIO_RANGE_II")
         end
     end
