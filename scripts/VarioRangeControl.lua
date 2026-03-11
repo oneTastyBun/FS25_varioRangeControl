@@ -1,25 +1,7 @@
 -- scripts/VarioRangeControl.lua
 -- FS25: Vario Range Control specialization
 --
--- in vehicle.xml, do:
---
--- <varioRanges defaultRange="2" shiftSpeedMax="2.5">
---		<range1 maxForwardSpeed="36" maxBackwardSpeed="20" minForwardGearRatio="25.0" maxForwardGearRatio="350" minBackwardGearRatio="25.0" maxBackwardGearRatio="350" />
---		<range2 maxForwardSpeed="53" maxBackwardSpeed="38" minForwardGearRatio="13.0" maxForwardGearRatio="300" minBackwardGearRatio="13.0" maxBackwardGearRatio="300" />
--- </varioRanges>
---
--- idea: add min/max gear ratio in each range maybe - DONE
--- not sure if there will be a noticeable gameplay difference, since the FS CVT always finds the perfect rpm with no power loss etc
--- IRL: the tractor feels more sluggish and "rumbly" if you are in range II under high load at slow speeds. you can feel it
---
--- idea: require clutch press/neutral active and a certain max speed to shift ranges, like irl - MAX SPEED DONE
--- example pulled from fendt favorit 900 gen 2 workshop manual:
--- I->II and II -> I is allowed if: speed 0-2.5km/h + neutral active/clutch pressed
--- I->II is allowed if: speed above 5km/h + neutral active/clutch pressed + load not too big. (max. 150 bar in vario high-pressure circuit)
---
--- issue: clutch or neutral do not exist for CVT transmissions in FS25
--- requiring pressing the clutch key would feel unnatural in the game, since nothing happens (no free-rolling or able to rev the engine)
--- this would require adding a clutch/neutral feature for CVT first
+-- https://github.com/oneTastyBun/FS25_varioRangeControl
 
 
 VarioRangeControl = {}
@@ -34,18 +16,11 @@ function VarioRangeControl.initSpecialization()
 
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#maxForwardSpeed", "Max forward speed in range I (km/h)", 36)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#maxBackwardSpeed", "Max backward speed in range I (km/h)", 20)
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#maxForwardSpeed", "Max forward speed in range II (km/h)", 53)
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#maxBackwardSpeed", "Max backward speed in range II (km/h)", 38)
 
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#minForwardGearRatio",  "Min forward gear ratio in range I",  nil)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#maxForwardGearRatio",  "Max forward gear ratio in range I",  nil)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#minBackwardGearRatio", "Min backward gear ratio in range I", nil)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#maxBackwardGearRatio", "Max backward gear ratio in range I", nil)
-
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#minForwardGearRatio",  "Min forward gear ratio in range II",  nil)
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#maxForwardGearRatio",  "Max forward gear ratio in range II",  nil)
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#minBackwardGearRatio", "Min backward gear ratio in range II", nil)
-    schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#maxBackwardGearRatio", "Max backward gear ratio in range II", nil)
 
     schema:register(XMLValueType.INT,   "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#defaultRange", "Default range (1 = I, 2 = II)", 2)
 
@@ -79,35 +54,22 @@ function VarioRangeControl.registerOverwrittenFunctions(vehicleType)
 end
 
 function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
-	-- todo: use maxForwardSpeed/maxBackwardSpeed from <transmission> as defaults in range 2 instead of a set number
-	-- current defaults are based on data from official user manual / repair manual for fendt 900 vario gen 2
-	
+	-- todo: instead of doing this, sanitize/validate the XML and throw errors if misconfigured
+	-- todo: testing - try to misconfigure the XML to see if the game crashes
     spec.forwardSpeedRange1  = xmlFile:getValue(key .. ".range1#maxForwardSpeed", 36)
     spec.backwardSpeedRange1 = xmlFile:getValue(key .. ".range1#maxBackwardSpeed", 20)
-	
-    spec.forwardSpeedRange2  = xmlFile:getValue(key .. ".range2#maxForwardSpeed", 53)
-    spec.backwardSpeedRange2 = xmlFile:getValue(key .. ".range2#maxBackwardSpeed", 38)
 	
     spec.range1MinForwardGearRatio  = xmlFile:getValue(key .. ".range1#minForwardGearRatio")
     spec.range1MaxForwardGearRatio  = xmlFile:getValue(key .. ".range1#maxForwardGearRatio")
     spec.range1MinBackwardGearRatio = xmlFile:getValue(key .. ".range1#minBackwardGearRatio")
     spec.range1MaxBackwardGearRatio = xmlFile:getValue(key .. ".range1#maxBackwardGearRatio")
 
-    spec.range2MinForwardGearRatio  = xmlFile:getValue(key .. ".range2#minForwardGearRatio")
-    spec.range2MaxForwardGearRatio  = xmlFile:getValue(key .. ".range2#maxForwardGearRatio")
-    spec.range2MinBackwardGearRatio = xmlFile:getValue(key .. ".range2#minBackwardGearRatio")
-    spec.range2MaxBackwardGearRatio = xmlFile:getValue(key .. ".range2#maxBackwardGearRatio")
-
-    -- true if we have configured at least one gear ratio in any range
+    -- true if we have configured at least one gear ratio
     spec.hasGearRatioConfig =
         spec.range1MinForwardGearRatio  ~= nil or
         spec.range1MaxForwardGearRatio  ~= nil or
         spec.range1MinBackwardGearRatio ~= nil or
-        spec.range1MaxBackwardGearRatio ~= nil or
-        spec.range2MinForwardGearRatio  ~= nil or
-        spec.range2MaxForwardGearRatio  ~= nil or
-        spec.range2MinBackwardGearRatio ~= nil or
-        spec.range2MaxBackwardGearRatio ~= nil
+        spec.range1MaxBackwardGearRatio ~= nil
 	
     local defaultRange = xmlFile:getValue(key.."#defaultRange", 2)
     spec.shiftSpeedMax  = xmlFile:getValue(key.."#shiftSpeedMax", 2.5)
@@ -210,14 +172,16 @@ function VarioRangeControl:getSpeedLimit(superFunc, onlyIfWorking)
     local movingDirection = self.movingDirection or 1
     local isReverse = movingDirection < 0
 
-    local forwardLimit = (spec.currentRange == 1) and spec.forwardSpeedRange1  or spec.forwardSpeedRange2
-    local backwardLimit = (spec.currentRange == 1) and spec.backwardSpeedRange1 or spec.backwardSpeedRange2
-    local rangeLimit = isReverse and backwardLimit or forwardLimit
-    if rangeLimit ~= nil and rangeLimit > 0 then
-        if limit == nil then
-            limit = rangeLimit
-        else
-            limit = math.min(limit, rangeLimit)
+    if spec.currentRange == 1 then
+        local forwardLimit = spec.forwardSpeedRange1
+        local backwardLimit = spec.backwardSpeedRange1
+        local rangeLimit = isReverse and backwardLimit or forwardLimit
+        if rangeLimit ~= nil and rangeLimit > 0 then
+            if limit == nil then
+                limit = rangeLimit
+            else
+                limit = math.min(limit, rangeLimit)
+            end
         end
     end
 
@@ -265,7 +229,7 @@ end
 
 function VarioRangeControl.applyGearRatios(self)
     local spec = self.spec_varioRangeControl
-    if spec == nil or not spec.hasGearRatioConfig then
+    if spec == nil then
         return
     end
 
@@ -282,49 +246,45 @@ function VarioRangeControl.applyGearRatios(self)
         spec.baseMaxForwardGearRatio  = motor.maxForwardGearRatioOrigin or motor.maxForwardGearRatio
         spec.baseMinBackwardGearRatio = motor.minBackwardGearRatioOrigin or motor.minBackwardGearRatio
         spec.baseMaxBackwardGearRatio = motor.maxBackwardGearRatioOrigin or motor.maxBackwardGearRatio
-
-        -- if range2 is not explicitly configured, treat base ratios as its config
-        spec.range2MinForwardGearRatio  = spec.range2MinForwardGearRatio  or spec.baseMinForwardGearRatio
-        spec.range2MaxForwardGearRatio  = spec.range2MaxForwardGearRatio  or spec.baseMaxForwardGearRatio
-        spec.range2MinBackwardGearRatio = spec.range2MinBackwardGearRatio or spec.baseMinBackwardGearRatio
-        spec.range2MaxBackwardGearRatio = spec.range2MaxBackwardGearRatio or spec.baseMaxBackwardGearRatio
     end
 	
     local rangeIndex = spec.currentRange or 2
 
-    local minF, maxF, minB, maxB
+    if rangeIndex == 1 and spec.hasGearRatioConfig then
+        local minF = spec.range1MinForwardGearRatio
+        local maxF = spec.range1MaxForwardGearRatio
+        local minB = spec.range1MinBackwardGearRatio
+        local maxB = spec.range1MaxBackwardGearRatio
 
-    if rangeIndex == 1 then
-        minF = spec.range1MinForwardGearRatio
-        maxF = spec.range1MaxForwardGearRatio
-        minB = spec.range1MinBackwardGearRatio
-        maxB = spec.range1MaxBackwardGearRatio
+        -- only change what’s actually set in XML
+        if minF ~= nil then
+            motor.minForwardGearRatio       = minF
+            motor.minForwardGearRatioOrigin = minF
+        end
+
+        if maxF ~= nil then
+            motor.maxForwardGearRatio       = maxF
+            motor.maxForwardGearRatioOrigin = maxF
+        end
+
+        if minB ~= nil then
+            motor.minBackwardGearRatio       = minB
+            motor.minBackwardGearRatioOrigin = minB
+        end
+
+        if maxB ~= nil then
+            motor.maxBackwardGearRatio       = maxB
+            motor.maxBackwardGearRatioOrigin = maxB
+        end
     else
-        minF = spec.range2MinForwardGearRatio
-        maxF = spec.range2MaxForwardGearRatio
-        minB = spec.range2MinBackwardGearRatio
-        maxB = spec.range2MaxBackwardGearRatio
-    end
-
-    -- only change what’s actually set in XML
-    if minF ~= nil then
-        motor.minForwardGearRatio       = minF
-        motor.minForwardGearRatioOrigin = minF
-    end
-
-    if maxF ~= nil then
-        motor.maxForwardGearRatio       = maxF
-        motor.maxForwardGearRatioOrigin = maxF
-    end
-
-    if minB ~= nil then
-        motor.minBackwardGearRatio       = minB
-        motor.minBackwardGearRatioOrigin = minB
-    end
-
-    if maxB ~= nil then
-        motor.maxBackwardGearRatio       = maxB
-        motor.maxBackwardGearRatioOrigin = maxB
+        motor.minForwardGearRatio       = spec.baseMinForwardGearRatio
+        motor.minForwardGearRatioOrigin = spec.baseMinForwardGearRatio
+        motor.maxForwardGearRatio       = spec.baseMaxForwardGearRatio
+        motor.maxForwardGearRatioOrigin = spec.baseMaxForwardGearRatio
+        motor.minBackwardGearRatio       = spec.baseMinBackwardGearRatio
+        motor.minBackwardGearRatioOrigin = spec.baseMinBackwardGearRatio
+        motor.maxBackwardGearRatio       = spec.baseMaxBackwardGearRatio
+        motor.maxBackwardGearRatioOrigin = spec.baseMaxBackwardGearRatio
     end
 end
 
