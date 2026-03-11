@@ -2,55 +2,79 @@
 
 This mod is in active development. This is not an official release build. Use at your own risk.
 
-Vario Range Control is a mod that adds support for two speed ranges (I/II) to CVT transmissions for tractors in Farming Simulator 25. Requires vehicle XML preparation. Intended to be used with Fendt Vario tractors that have a I (field) / II (road) speed range control button in real life. By default you must stop in order to shift ranges (as this is how I drive a Vario IRL), but the max allowed speed for shifting can be configured per vehicle in xml. The keybind (Default: SHIFT+1) is a toggle and can be configured in the controls menu like normal.
+Real Fendt Vario tractors with the older *ML transmissions* use two operating ranges: **range I for field work and range II for transport**. This Farming Simulator 25 mod recreates that behaviour by allowing the driver to manually switch ranges. This mod requires a properly configured mod to function, XML description below.
 
-Why have I made this? From real life experience driving Fendt Vario tractors with the old ML transmissions, I felt there was something missing in the game. Namely stopping by the edge of the field or before driving up the silage bunker to switch between the I/II ranges, which becomes second nature after a while.. I wanted to implement this feature into the game without completely overhauling or redesigning the CVT system, so I made this.
+Why have I made this? From real life experience driving Fendt Vario tractors with the old ML transmissions, I felt there was something missing in the game. Namely stopping by the edge of the field or before driving up the silage bunker to switch between **operating range I (field)** and **operating range II (road)**, which becomes second nature after a while. I wanted to implement this feature into the game without completely overhauling or redesigning the CVT system, so I made this.
 
-### XML format:
+By default the vehicle must be stopped to switch ranges (as this is how I drive a Vario IRL), but the maximum allowed speed for switching can be configured per vehicle in XML. The keybind (Default: **SHIFT+1**) is a toggle and can be configured in the controls menu like normal.
+
+### Operating ranges
+
+- **Range I (Field)** – intended for field work and heavy pulling
+- **Range II (Road)** – intended for transport and higher driving speeds
+
+
+## Features
+
+- Manual Vario operating range selection (I / II)
+- The currently selected range is indicated on the HUD
+- The last range selected is always set, even after turning the ignition on or off, or saving and loading the game
+- Range switching is only allowed below the configured speed limit (warning shown if exceeded)
+- Configurable XML speed and ratio limits for operating range I
+
+### Future ideas
+
+- Different maximum allowed speed for switching ranges depending on if switching from I -> II or II -> I
+- Require a minimum allowed temperature for switching ranges (IRL example: Fendt Vario 700 COM3 - min trans temp 10C)
+
+## XML Configuration
+
+In the mod vehicle XML file, add a `<varioRanges>` section inside the vehicle `<transmission>`.
+
+### Full XML format
+
 ```xml
-<transmission .. >
+<transmission ...>
   <varioRanges defaultRange="2" shiftSpeedMax="2.5">
-    <range1 maxForwardSpeed="36" maxBackwardSpeed="20" minForwardGearRatio="25.0" maxForwardGearRatio="350" minBackwardGearRatio="25.0" maxBackwardGearRatio="350" />
-	<range2 maxForwardSpeed="53" maxBackwardSpeed="38" minForwardGearRatio="13" maxForwardGearRatio="300" minBackwardGearRatio="13" maxBackwardGearRatio="300" />
+    <range1 maxForwardSpeed="36" maxBackwardSpeed="20" minForwardGearRatio="25.0" maxForwardGearRatio="350" minBackwardGearRatio="25.0" maxBackwardGearRatio="350"/>
   </varioRanges>
 </transmission>
 ```
 
-### Example usage:
-Not all values need to be defined.
-  ```xml
-  <motorConfiguration name="720 Vario" hp="203" price="0" consumerConfigurationIndex="1">
-    <motor torqueScale="1.11" minRpm="650" maxRpm="1700" maxForwardSpeed="53" maxBackwardSpeed="33" brakeForce="8" lowBrakeForceScale="0.1" lowBrakeForceSpeedLimit="1" ptoMotorRpmRatio="3" dampingRateScale="1">
-	  <torque normRpm="0.45" torque="0.9"/>
-	  <torque normRpm="0.5" torque="0.97"/>
-	  <torque normRpm="0.59" torque="1"/>
-	  <torque normRpm="0.72" torque="1"/>
-	  <torque normRpm="0.86" torque="0.88"/>
-	  <torque normRpm="1" torque="0.72"/>
-    </motor>
-    <transmission minForwardGearRatio="10.3" maxForwardGearRatio="320" minBackwardGearRatio="16.7" maxBackwardGearRatio="320" name="$l10n_info_transmission_cvt">
-      <varioRanges>
-        <range1 maxForwardSpeed="28" maxBackwardSpeed="17" minForwardGearRatio="25" />
-        <range2 maxForwardSpeed="50" maxBackwardSpeed="33" />
-      </varioRanges>
-    </transmission>
-  </motorConfiguration>
+### Minimal configuration
+
+Only the maximum speeds must be defined. All other attributes are optional.
+
+```xml
+<transmission ...>
+  <varioRanges>
+    <range1 maxForwardSpeed="36" maxBackwardSpeed="20"/>
+  </varioRanges>
+</transmission>
 ```
 
-If values are omitted, the following data applies:
+### Attributes
 
+#### `<varioRanges>`
 
-Default range: 2 (II)
+| Attribute | Description | Default |
+|----------|-------------|--------|
+| `defaultRange` | Range selected when entering the vehicle the first time | `2` |
+| `shiftSpeedMax` | Maximum vehicle speed where range switching is allowed | `2.5` kph |
 
-Max speed for shifting: 2.5 kph
+#### `<range1>`
 
-Default speeds in range I (field): 0 - 36 kph forwards, 0 - 20 kph reverse
+Gear ratio limits can be used to mimic real Fendt Vario behaviour, where engine RPM rises noticeably as the tractor approaches the maximum speed of operating range I.
 
-Default speeds in range II (road): 0 - 53 kph forwards, 0 - 38 kph reverse
+| Attribute | Description | Default |
+|----------|-------------|--------|
+| `maxForwardSpeed` | Maximum forward speed in this range | Required |
+| `maxBackwardSpeed` | Maximum reverse speed in this range | Required |
+| `minForwardGearRatio` | Minimum forward gear ratio | From vehicle transmission |
+| `maxForwardGearRatio` | Maximum forward gear ratio | From vehicle transmission |
+| `minBackwardGearRatio` | Minimum reverse gear ratio | From vehicle transmission |
+| `maxBackwardGearRatio` | Maximum reverse gear ratio | From vehicle transmission |
 
-Default gear ratios: As defined in vehicle transmission
-
-
-### Screenshot
+## Screenshot
 
 <img width="3840" height="2160" alt="screenshot" src="https://github.com/user-attachments/assets/00c18211-80b0-4477-a95e-c80e81f8a258" />
