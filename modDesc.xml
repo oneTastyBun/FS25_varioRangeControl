@@ -20,6 +20,7 @@ Vario Range Control adds support for Fendt Vario style I / II speed ranges to CV
     <extraSourceFiles>
         <sourceFile filename="scripts/VarioRangeControl_register.lua"/>
 		<sourceFile filename="scripts/VarioRangeControlEvent.lua"/>
+		<sourceFile filename="scripts/VarioRangeControlDebug.lua"/>
     </extraSourceFiles>
 
     <actions>
@@ -35,14 +36,14 @@ Vario Range Control adds support for Fendt Vario style I / II speed ranges to CV
     <l10n>
 		<!-- F1 menu help text -->
         <text name="input_VARIO_RANGE_I">
-            <en>Change Vario speed range</en>
+            <en>Change Vario range</en>
         </text>
         <text name="input_VARIO_RANGE_II">
-            <en>Change Vario speed range</en>
+            <en>Change Vario range</en>
         </text>
 		<!-- keybind text -->
 		<text name="input_VARIO_TOGGLE_RANGE">
-			<en>Change Vario speed range</en>
+			<en>Change Vario operating range</en>
 		</text>
     </l10n>
 </modDesc>
