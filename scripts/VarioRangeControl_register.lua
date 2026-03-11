@@ -1,52 +1,73 @@
 -- scripts/VarioRangeControl_register.lua
+-- Attach specialization to the tractor vehicle type and any vehicle types inheriting from it
 
--- Register specialization
-g_specializationManager:addSpecialization(
-    "varioRangeControl",
-    "VarioRangeControl",
-    g_currentModDirectory.."scripts/VarioRangeControl.lua"
-)
+local modName = g_currentModName
+local modDir = g_currentModDirectory
+local localSpecName = "varioRangeControl"
+local fullSpecName = modName .. "." .. localSpecName
+local registrationDone = false
 
-VarioRangeControlRegister = {}
-VarioRangeControlRegister.done = false
+local function hasVehicleTypeParent(vehicleType, parentTypeName)
+    local currentType = vehicleType
 
-function VarioRangeControlRegister:register(name)
-    if VarioRangeControlRegister.done then
+    while currentType ~= nil do
+        if currentType.name == parentTypeName then
+            return true
+        end
+
+        currentType = currentType.parent
+    end
+
+    return false
+end
+
+
+local function registerSpecialization(self)
+    if registrationDone then
         return
     end
 
-    print("VarioRangeControlRegister: running TypeManager.finalizeTypes hook")
-
-    for _, vehicleType in pairs(g_vehicleTypeManager:getTypes()) do
-        local motorized = false
-        local hasVario  = false
-
-        for _, specName in pairs(vehicleType.specializationNames) do
-            if specName == "motorized" then
-                motorized = true
-            end
-            if specName == "varioRangeControl" then
-                hasVario = true
-            end
-        end
-
-        if motorized then
-            if not hasVario then
-                print("varioRangeControl: attaching varioRangeControl to vehicleType '" .. tostring(vehicleType.name) .. "'")
-                g_vehicleTypeManager:addSpecialization(
-                    vehicleType.name,
-                    "FS25_varioRangeControl.varioRangeControl"
-                )
-            else
-                print("varioRangeControl: vehicleType '" .. tostring(vehicleType.name) .. "' already has varioRangeControl")
-            end
-        end
+    if self == nil or self.typeName ~= "vehicle" then
+        return
     end
 
-    VarioRangeControlRegister.done = true
+    registrationDone = true
+
+    local count = 0
+
+    g_specializationManager:addSpecialization(
+        localSpecName,
+        "VarioRangeControl",
+        modDir .. "scripts/VarioRangeControl.lua"
+    )
+
+    for typeName, vehicleType in pairs(self:getTypes()) do
+        if vehicleType ~= nil
+            and hasVehicleTypeParent(vehicleType, "tractor")
+            and vehicleType.specializationsByName[fullSpecName] == nil then
+
+            self:addSpecialization(typeName, fullSpecName)
+            count = count + 1
+
+			-- for debugging
+            print(string.format(
+                "[%s] Attached VarioRangeControl specialization to vehicle type '%s' (parent: %s)",
+                modName,
+                vehicleType.name,
+                vehicleType.parent and vehicleType.parent.name or "none"
+            ))
+			
+			-- for release
+			-- Logging.info("[%s] VarioRangeControl attached to vehicle type '%s'", modName, vehicleType.name)
+        end
+    end
+	
+	-- for debugging
+    print(string.format("[%s] VarioRangeControl attached to %d vehicle types", modName, count))
+	
+	-- for release
+	-- Logging.info("[%s] VarioRangeControl attached to %d vehicle types", modName, count)
 end
 
-TypeManager.finalizeTypes = Utils.prependedFunction(
-    TypeManager.finalizeTypes,
-    VarioRangeControlRegister.register
-)
+
+TypeManager.finalizeTypes = Utils.prependedFunction(TypeManager.finalizeTypes, registerSpecialization)
