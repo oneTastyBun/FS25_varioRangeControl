@@ -1,5 +1,10 @@
 # FS25_varioRangeControl
-Optionally adds two speed ranges (I/II) to CVT transmissions for tractors. Requires vehicle XML preparation. Intended to be used with Fendt Vario tractors that have a I (field) / II (road) speed range control button in real life. By default you must stop in order to shift ranges, as this is how I drive a Vario IRL. The max allowed speed for shifting can be configured per vehicle in xml. The keybind is a toggle and can be configured in the controls menu like normal.
+
+This mod is in active development. This is not an official release build. Use at your own risk.
+
+Vario Range Control is a mod that adds support for two speed ranges (I/II) to CVT transmissions for tractors in Farming Simulator 25. Requires vehicle XML preparation. Intended to be used with Fendt Vario tractors that have a I (field) / II (road) speed range control button in real life. By default you must stop in order to shift ranges (as this is how I drive a Vario IRL), but the max allowed speed for shifting can be configured per vehicle in xml. The keybind (Default: SHIFT+1) is a toggle and can be configured in the controls menu like normal.
+
+Why have I made this? From real life experience driving Fendt Vario tractors with the old ML transmissions, I felt there was something missing in the game. Namely stopping by the edge of the field or before driving up the silage bunker to switch between the I/II ranges, which becomes second nature after a while.. I wanted to implement this feature into the game without completely overhauling or redesigning the CVT system, so I made this.
 
 ### XML format:
 ```xml

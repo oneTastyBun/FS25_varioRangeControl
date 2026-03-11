@@ -8,11 +8,11 @@
 --		<range2 maxForwardSpeed="53" maxBackwardSpeed="38" minForwardGearRatio="13.0" maxForwardGearRatio="300" minBackwardGearRatio="13.0" maxBackwardGearRatio="300" />
 -- </varioRanges>
 --
--- idea: add min/max gear ratio in each range maybe
+-- idea: add min/max gear ratio in each range maybe - DONE
 -- not sure if there will be a noticeable gameplay difference, since the FS CVT always finds the perfect rpm with no power loss etc
 -- IRL: the tractor feels more sluggish and "rumbly" if you are in range II under high load at slow speeds. you can feel it
 --
--- idea: require clutch press/neutral active and a certain max speed to shift ranges, like irl
+-- idea: require clutch press/neutral active and a certain max speed to shift ranges, like irl - MAX SPEED DONE
 -- example pulled from fendt favorit 900 gen 2 workshop manual:
 -- I->II and II -> I is allowed if: speed 0-2.5km/h + neutral active/clutch pressed
 -- I->II is allowed if: speed above 5km/h + neutral active/clutch pressed + load not too big. (max. 150 bar in vario high-pressure circuit)
@@ -20,12 +20,7 @@
 -- issue: clutch or neutral do not exist for CVT transmissions in FS25
 -- requiring pressing the clutch key would feel unnatural in the game, since nothing happens (no free-rolling or able to rev the engine)
 -- this would require adding a clutch/neutral feature for CVT first
---
--- idea: inject xml into relevant base game/dlc vehicles? at least the fendt 300/500 vario tractors should have ranges i think
---
--- feature update 27/11/2025: implemented configurable max speed for range shift
--- feature update 29/11/2025: implemented configurable gear ratios in each range
--- feature update 10/03/2026: implemented persistence across savegame sessions
+
 
 VarioRangeControl = {}
 
@@ -42,7 +37,6 @@ function VarioRangeControl.initSpecialization()
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#maxForwardSpeed", "Max forward speed in range II (km/h)", 53)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range2#maxBackwardSpeed", "Max backward speed in range II (km/h)", 38)
 
-    -- 29/11/2025 update
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#minForwardGearRatio",  "Min forward gear ratio in range I",  nil)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#maxForwardGearRatio",  "Max forward gear ratio in range I",  nil)
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges.range1#minBackwardGearRatio", "Min backward gear ratio in range I", nil)
@@ -55,13 +49,10 @@ function VarioRangeControl.initSpecialization()
 
     schema:register(XMLValueType.INT,   "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#defaultRange", "Default range (1 = I, 2 = II)", 2)
 
-    -- 27/11/2025 update
     schema:register(XMLValueType.FLOAT, "vehicle.motorized.motorConfigurations.motorConfiguration(?).transmission.varioRanges#shiftSpeedMax", "Max vehicle speed for range shift (km/h)", 2.5)
 
     schema:setXMLSpecializationType()
 	
-	-- 10/03/2026 update
-    -- savegame schema registration
 	local schemaSavegame = Vehicle.xmlSchemaSavegame
 	schemaSavegame:setXMLSpecializationType("FS25_varioRangeControl.varioRangeControl")
 	schemaSavegame:register(XMLValueType.INT, "vehicles.vehicle(?).FS25_varioRangeControl.varioRangeControl#currentRange", "Current vario range", 2)
@@ -97,7 +88,6 @@ function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
     spec.forwardSpeedRange2  = xmlFile:getValue(key .. ".range2#maxForwardSpeed", 53)
     spec.backwardSpeedRange2 = xmlFile:getValue(key .. ".range2#maxBackwardSpeed", 38)
 	
-    -- 29/11/2025 update
     spec.range1MinForwardGearRatio  = xmlFile:getValue(key .. ".range1#minForwardGearRatio")
     spec.range1MaxForwardGearRatio  = xmlFile:getValue(key .. ".range1#maxForwardGearRatio")
     spec.range1MinBackwardGearRatio = xmlFile:getValue(key .. ".range1#minBackwardGearRatio")
@@ -120,7 +110,7 @@ function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
         spec.range2MaxBackwardGearRatio ~= nil
 	
     local defaultRange = xmlFile:getValue(key.."#defaultRange", 2)
-    spec.shiftSpeedMax  = xmlFile:getValue(key.."#shiftSpeedMax", 2.5) -- 27/11/2025 update
+    spec.shiftSpeedMax  = xmlFile:getValue(key.."#shiftSpeedMax", 2.5)
 
 	-- initialize spec.currentRange
     spec.currentRange = math.clamp(defaultRange, 1, 2)
@@ -169,22 +159,20 @@ function VarioRangeControl:onPostLoad(savegame)
         return
     end
 	
-	-- 10/03/2026: save/load range to vehicles.xml
+	-- save/load range to vehicles.xml
     if savegame ~= nil and not savegame.resetVehicles then
         local key = savegame.key .. ".FS25_varioRangeControl.varioRangeControl"
         VarioRangeControl.loadRangeFromSavegameXML(self, savegame.xmlFile, key)
     end
 
-    -- 29/11/2025: apply initial gear ratios for default range
+    -- apply initial gear ratios for default range
     VarioRangeControl.applyGearRatios(self)
 end
-
 
 function VarioRangeControl:onDelete()
     self.spec_varioRangeControl = nil
 end
 
--- 30/12/2025: MP
 function VarioRangeControl:onWriteStream(streamId, connection)
     local spec = self.spec_varioRangeControl
     if spec == nil then
@@ -210,7 +198,6 @@ function VarioRangeControl:onReadStream(streamId, connection)
     VarioRangeControl.applyGearRatios(self)
     VarioRangeControl.updateActionEventText(self)
 end
-
 
 function VarioRangeControl:getSpeedLimit(superFunc, onlyIfWorking)
     local limit, doCheckSpeedLimit = superFunc(self, onlyIfWorking)
@@ -255,13 +242,11 @@ function VarioRangeControl:setVarioRange(rangeIndex)
     if spec.currentRange ~= rangeIndex then
         spec.currentRange = rangeIndex
 
-        -- 29/11/2025: update motor gear ratio limits for the new range
+        -- update motor gear ratio limits for the new range
         VarioRangeControl.applyGearRatios(self)
     end
 end
 
-
--- 27/11/2025 update
 function VarioRangeControl.canShiftRange(self)
     local spec = self.spec_varioRangeControl
     if spec == nil then
@@ -278,7 +263,6 @@ function VarioRangeControl.canShiftRange(self)
 	return true
 end
 
--- 29/11/2025 update
 function VarioRangeControl.applyGearRatios(self)
     local spec = self.spec_varioRangeControl
     if spec == nil or not spec.hasGearRatioConfig then
@@ -292,15 +276,14 @@ function VarioRangeControl.applyGearRatios(self)
 
     local motor = motorizedSpec.motor
 	
-	-- 05/12/2025 fix
-    -- Cache original base ratios once
+    -- cache original base ratios once
     if spec.baseMinForwardGearRatio == nil then
         spec.baseMinForwardGearRatio  = motor.minForwardGearRatioOrigin or motor.minForwardGearRatio
         spec.baseMaxForwardGearRatio  = motor.maxForwardGearRatioOrigin or motor.maxForwardGearRatio
         spec.baseMinBackwardGearRatio = motor.minBackwardGearRatioOrigin or motor.minBackwardGearRatio
         spec.baseMaxBackwardGearRatio = motor.maxBackwardGearRatioOrigin or motor.maxBackwardGearRatio
 
-        -- If range2 is not explicitly configured, treat base ratios as its config
+        -- if range2 is not explicitly configured, treat base ratios as its config
         spec.range2MinForwardGearRatio  = spec.range2MinForwardGearRatio  or spec.baseMinForwardGearRatio
         spec.range2MaxForwardGearRatio  = spec.range2MaxForwardGearRatio  or spec.baseMaxForwardGearRatio
         spec.range2MinBackwardGearRatio = spec.range2MinBackwardGearRatio or spec.baseMinBackwardGearRatio
@@ -384,7 +367,7 @@ function VarioRangeControl.actionEventToggleRange(self, actionName, inputValue, 
         return
     end
 
-    -- 27/11/2025: only allow shift when speed is within allowed range
+    -- only allow shift when speed is within allowed range
     if not VarioRangeControl.canShiftRange(self) then
         if g_currentMission ~= nil then
             g_currentMission:showBlinkingWarning("Unable to change Vario range: Slow down!", 2000)
@@ -397,7 +380,7 @@ function VarioRangeControl.actionEventToggleRange(self, actionName, inputValue, 
 	
 	self:setVarioRange(newRange)
 
-	-- 30/12/2025: MP - client sends request to server; server broadcasts and applies
+	-- MP - client sends request to server; server broadcasts and applies
 	if g_server ~= nil then
 		g_server:broadcastEvent(VarioRangeControlEvent.new(self, newRange), nil, nil, self)
 	else
@@ -448,7 +431,7 @@ function VarioRangeControl:getGearInfoToDisplay(superFunc)
 end
 --
 
--- 10/03/2026: save/load range to vehicles.xml
+-- save/load range to vehicles.xml
 function VarioRangeControl.loadRangeFromSavegameXML(self, xmlFile, key)
     local spec = self.spec_varioRangeControl
     if spec == nil or xmlFile == nil or key == nil then

@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="104">
+<modDesc descVersion="106">
     <author>oneTastyBun</author>
-    <version>1.0.0.0</version>
+    <version>0.1.5.0-beta</version>
 
     <title>
         <en>Vario Range Control</en>
     </title>
 
     <description>
-        <en><![CDATA[Adds Fendt Vario style I / II speed ranges to CVT transmissions. Vehicles must be prepared to use this script.]]></en>
+        <en><![CDATA[This mod is in active development. This is not an official release build. Use at your own risk.
+		
+Vario Range Control adds support for Fendt Vario style I / II speed ranges to CVT transmissions. Vehicles must be prepared to use this script.]]></en>
     </description>
 
     <iconFilename>icon.dds</iconFilename>
@@ -31,12 +33,14 @@
     </inputBinding>
 
     <l10n>
+		<!-- F1 menu help text -->
         <text name="input_VARIO_RANGE_I">
             <en>Change Vario speed range</en>
         </text>
         <text name="input_VARIO_RANGE_II">
             <en>Change Vario speed range</en>
         </text>
+		<!-- keybind text -->
 		<text name="input_VARIO_TOGGLE_RANGE">
 			<en>Change Vario speed range</en>
 		</text>
