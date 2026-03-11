@@ -49,3 +49,8 @@ Default speeds in range I (field): 0 - 36 kph forwards, 0 - 20 kph reverse
 Default speeds in range II (road): 0 - 53 kph forwards, 0 - 38 kph reverse
 
 Default gear ratios: As defined in vehicle transmission
+
+
+### Screenshot
+
+<img width="3840" height="2160" alt="screenshot" src="https://github.com/user-attachments/assets/00c18211-80b0-4477-a95e-c80e81f8a258" />
