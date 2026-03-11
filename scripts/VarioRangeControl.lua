@@ -217,14 +217,17 @@ function VarioRangeControl.canShiftRange(self)
         return false
     end
 
-    local speedKmh = self:getLastSpeed()
-    local maxSpeed = spec.shiftSpeedMax or 1
+    local speedKmh = math.abs(self:getLastSpeed() or 0)
+    local maxSpeed = math.max(spec.shiftSpeedMax or 0, 0)
 
-    if speedKmh > maxSpeed then
-        return false
+    -- allow tiny standing-still jitter when shiftSpeedMax is 0
+    local speedTolerance = 0.15
+
+    if maxSpeed <= 0 then
+        return speedKmh <= speedTolerance
     end
-	
-	return true
+
+    return speedKmh <= maxSpeed
 end
 
 function VarioRangeControl.applyGearRatios(self)
