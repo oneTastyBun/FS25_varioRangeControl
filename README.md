@@ -32,6 +32,7 @@ By default the vehicle must be stopped to switch ranges (as this is how I drive 
 In the mod vehicle XML file, add a `<varioRanges>` section inside the vehicle `<transmission>`.
 
 ### Full XML format
+Range I can define custom speed limits and ratios. Range II uses the default transmission configuration.
 
 ```xml
 <transmission ...>
