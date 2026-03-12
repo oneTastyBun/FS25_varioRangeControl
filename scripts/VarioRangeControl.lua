@@ -53,7 +53,35 @@ function VarioRangeControl.registerOverwrittenFunctions(vehicleType)
     SpecializationUtil.registerOverwrittenFunction(vehicleType, "getGearInfoToDisplay", VarioRangeControl.getGearInfoToDisplay)
 end
 
-function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
+function VarioRangeControl.getLogContext(self, spec)
+    local motorConfigName = "Motor configuration"
+    if spec ~= nil and spec.motorConfigName ~= nil and spec.motorConfigName ~= "" then
+        motorConfigName = spec.motorConfigName
+    end
+
+    return motorConfigName
+end
+
+function VarioRangeControl.logConfigError(self, spec, message, ...)
+    local motorConfigName = VarioRangeControl.getLogContext(self, spec)
+    Logging.error("VarioRangeControl: %s " .. message, motorConfigName, ...)
+end
+
+function VarioRangeControl.logConfigWarning(self, spec, message, ...)
+    local motorConfigName = VarioRangeControl.getLogContext(self, spec)
+    Logging.warning("VarioRangeControl: %s " .. message, motorConfigName, ...)
+end
+
+function VarioRangeControl.validatePositiveRatio(self, spec, value, ratioName)
+    if value ~= nil and value <= 0 then
+        VarioRangeControl.logConfigWarning(self, spec, "invalid %s (%s). Using base transmission values.", ratioName, tostring(value))
+        return nil
+    end
+
+    return value
+end
+
+function VarioRangeControl.loadVarioRangesFromXML(self, xmlFile, key, spec)
 	-- todo: instead of doing this, sanitize/validate the XML and throw errors if misconfigured
 	-- todo: testing - try to misconfigure the XML to see if the game crashes
     spec.forwardSpeedRange1  = xmlFile:getValue(key .. ".range1#maxForwardSpeed", 36)
@@ -64,6 +92,47 @@ function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
     spec.range1MinBackwardGearRatio = xmlFile:getValue(key .. ".range1#minBackwardGearRatio")
     spec.range1MaxBackwardGearRatio = xmlFile:getValue(key .. ".range1#maxBackwardGearRatio")
 
+    local defaultRange = xmlFile:getValue(key.."#defaultRange", 2)
+    spec.shiftSpeedMax  = xmlFile:getValue(key.."#shiftSpeedMax", 2.5)
+
+    if defaultRange < 1 or defaultRange > 2 then
+        local clampedDefaultRange = math.clamp(defaultRange, 1, 2)
+        VarioRangeControl.logConfigWarning(self, spec, "invalid defaultRange (%s). Clamped to %d.", tostring(defaultRange), clampedDefaultRange)
+        defaultRange = clampedDefaultRange
+    end
+
+    if spec.shiftSpeedMax < 0 then
+        VarioRangeControl.logConfigWarning(self, spec, "invalid shiftSpeedMax (%s). Clamped to 0.", tostring(spec.shiftSpeedMax))
+        spec.shiftSpeedMax = 0
+    end
+
+    if spec.forwardSpeedRange1 <= 0 then
+        VarioRangeControl.logConfigError(self, spec, "invalid maxForwardSpeed (%s). Disabled.", tostring(spec.forwardSpeedRange1))
+        return false
+    end
+
+    if spec.backwardSpeedRange1 <= 0 then
+        VarioRangeControl.logConfigError(self, spec, "invalid maxBackwardSpeed (%s). Disabled.", tostring(spec.backwardSpeedRange1))
+        return false
+    end
+
+    spec.range1MinForwardGearRatio = VarioRangeControl.validatePositiveRatio(self, spec, spec.range1MinForwardGearRatio, "minForwardGearRatio")
+    spec.range1MaxForwardGearRatio = VarioRangeControl.validatePositiveRatio(self, spec, spec.range1MaxForwardGearRatio, "maxForwardGearRatio")
+    spec.range1MinBackwardGearRatio = VarioRangeControl.validatePositiveRatio(self, spec, spec.range1MinBackwardGearRatio, "minBackwardGearRatio")
+    spec.range1MaxBackwardGearRatio = VarioRangeControl.validatePositiveRatio(self, spec, spec.range1MaxBackwardGearRatio, "maxBackwardGearRatio")
+
+    if spec.range1MinForwardGearRatio ~= nil and spec.range1MaxForwardGearRatio ~= nil and spec.range1MinForwardGearRatio > spec.range1MaxForwardGearRatio then
+        VarioRangeControl.logConfigWarning(self, spec, "invalid forward ratios. Using base transmission values.")
+        spec.range1MinForwardGearRatio = nil
+        spec.range1MaxForwardGearRatio = nil
+    end
+
+    if spec.range1MinBackwardGearRatio ~= nil and spec.range1MaxBackwardGearRatio ~= nil and spec.range1MinBackwardGearRatio > spec.range1MaxBackwardGearRatio then
+        VarioRangeControl.logConfigWarning(self, spec, "invalid backward ratios. Using base transmission values.")
+        spec.range1MinBackwardGearRatio = nil
+        spec.range1MaxBackwardGearRatio = nil
+    end
+
     -- true if we have configured at least one gear ratio
     spec.hasGearRatioConfig =
         spec.range1MinForwardGearRatio  ~= nil or
@@ -71,11 +140,10 @@ function VarioRangeControl.loadVarioRangesFromXML(xmlFile, key, spec)
         spec.range1MinBackwardGearRatio ~= nil or
         spec.range1MaxBackwardGearRatio ~= nil
 	
-    local defaultRange = xmlFile:getValue(key.."#defaultRange", 2)
-    spec.shiftSpeedMax  = xmlFile:getValue(key.."#shiftSpeedMax", 2.5)
-
 	-- initialize spec.currentRange
-    spec.currentRange = math.clamp(defaultRange, 1, 2)
+    spec.currentRange = defaultRange
+
+    return true
 end
 
 function VarioRangeControl:onLoad(savegame)
@@ -108,8 +176,14 @@ function VarioRangeControl:onLoad(savegame)
     end
 	--
 
+    local motorConfigurationKey = key:gsub("%.transmission%.varioRanges$", "")
+    spec.motorConfigName = self.xmlFile:getValue(motorConfigurationKey .. "#name")
+
 	-- load configuration data from vehicle XML
-    VarioRangeControl.loadVarioRangesFromXML(self.xmlFile, key, spec)
+    if not VarioRangeControl.loadVarioRangesFromXML(self, self.xmlFile, key, spec) then
+        self.spec_varioRangeControl = nil
+        return
+    end
 
     spec.actionEvents = {}
     spec.varioActionEventId = nil
