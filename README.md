@@ -98,6 +98,3 @@ Example:
 
 - Different maximum allowed speed for switching ranges depending on if switching from I -> II or II -> I
 - Require a minimum allowed temperature for switching ranges (IRL example: Fendt Vario 700 COM3 - min trans temp 10C)
-Use Control + Shift + m to toggle the tab key moving focus. Alternatively, use esc then tab to move to the next interactive element on the page.
-Attach files by dragging & dropping, selecting or pasting them.
-Editing FS25_varioRangeControl/README.md at main · oneTastyBun/FS25_varioRangeControl
