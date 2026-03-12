@@ -8,9 +8,15 @@
     </title>
 
     <description>
-        <en><![CDATA[This mod is in active development. This is not an official release build. Use at your own risk.
-		
-Vario Range Control adds support for Fendt Vario style I / II speed ranges to CVT transmissions. Vehicles must be prepared to use this script.]]></en>
+        <en><![CDATA[Adds support for Vario I / II operating ranges to prepared CVT tractors.
+
+Real Fendt Vario tractors with ML transmissions use two operating ranges:
+Range I for field work and Range II for transport.
+
+This mod recreates this behaviour by allowing the driver to manually switch ranges.
+
+Vehicles must be configured to support this mod.
+		]]></en>
     </description>
 
     <iconFilename>icon.dds</iconFilename>
@@ -20,7 +26,7 @@ Vario Range Control adds support for Fendt Vario style I / II speed ranges to CV
     <extraSourceFiles>
         <sourceFile filename="scripts/VarioRangeControl_register.lua"/>
 		<sourceFile filename="scripts/VarioRangeControlEvent.lua"/>
-		<sourceFile filename="scripts/VarioRangeControlDebug.lua"/>
+		<!-- <sourceFile filename="scripts/VarioRangeControlDebug.lua"/> -->
     </extraSourceFiles>
 
     <actions>

@@ -49,24 +49,18 @@ local function registerSpecialization(self)
             self:addSpecialization(typeName, fullSpecName)
             count = count + 1
 
-			-- for debugging
-            print(string.format(
-                "[%s] Attached VarioRangeControl specialization to vehicle type '%s' (parent: %s)",
-                modName,
-                vehicleType.name,
-                vehicleType.parent and vehicleType.parent.name or "none"
-            ))
+            -- print(string.format(
+                -- "[%s] Attached VarioRangeControl specialization to vehicle type '%s' (parent: %s)",
+                -- modName,
+                -- vehicleType.name,
+                -- vehicleType.parent and vehicleType.parent.name or "none"
+            -- ))
 			
-			-- for release
-			-- Logging.info("[%s] VarioRangeControl attached to vehicle type '%s'", modName, vehicleType.name)
+			Logging.info("[%s] VarioRangeControl attached to vehicle type '%s'", modName, vehicleType.name)
         end
     end
 	
-	-- for debugging
-    print(string.format("[%s] VarioRangeControl attached to %d vehicle types", modName, count))
-	
-	-- for release
-	-- Logging.info("[%s] VarioRangeControl attached to %d vehicle types", modName, count)
+	Logging.info("[%s] VarioRangeControl attached to %d vehicle types", modName, count)
 end
 
 
