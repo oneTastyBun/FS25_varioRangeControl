@@ -1,8 +1,8 @@
 # FS25_varioRangeControl
 
-This mod is in active development. This is not an official release build. Use at your own risk.
+This mod is in a development/testing stage and may contain errors. Please report any issues!
 
-Real Fendt Vario tractors with the older *ML transmissions* use two operating ranges: **range I for field work and range II for transport**. This Farming Simulator 25 mod recreates that behaviour by allowing the driver to manually switch ranges. This mod requires a properly configured mod to function, XML description below.
+Real Fendt Vario tractors with the older *ML transmissions* use two operating ranges: **range I for field work and range II for transport**. This Farming Simulator 25 mod recreates that behaviour by allowing the driver to manually switch ranges. This mod builds the feature into the base game Fendt 300/500 Vario tractors. Mod vehicles need XML preparation to function, see XML description below.
 
 Why have I made this? From real life experience driving Fendt Vario tractors with the old ML transmissions, I felt there was something missing in the game. Namely stopping by the edge of the field or before driving up the silage bunker to switch between **operating range I (field)** and **operating range II (road)**, which becomes second nature after a while. I wanted to implement this feature into the game without completely overhauling or redesigning the CVT system, so I made this.
 
@@ -13,7 +13,6 @@ By default the vehicle must be stopped to switch ranges (as this is how I drive 
 - **Range I (Field)** – intended for field work and heavy pulling
 - **Range II (Road)** – intended for transport and higher driving speeds
 
-
 ## Features
 
 - Manual Vario operating range selection (I / II)
@@ -23,10 +22,14 @@ By default the vehicle must be stopped to switch ranges (as this is how I drive 
 - Configurable speed and ratio limits for operating range I in XML
 - Dashboard integration
 
-### Future ideas
+## Supported vehicles
 
-- Different maximum allowed speed for switching ranges depending on if switching from I -> II or II -> I
-- Require a minimum allowed temperature for switching ranges (IRL example: Fendt Vario 700 COM3 - min trans temp 10C)
+- Any properly configured mod vehicle
+
+Built-in support included for:
+
+- Base game Fendt Vario 300 Series
+- Base game Fendt Vario 500 Series
 
 ## XML Configuration
 
@@ -90,3 +93,11 @@ Example:
 ## Screenshot
 
 <img width="3840" height="2160" alt="screenshot" src="https://github.com/user-attachments/assets/00c18211-80b0-4477-a95e-c80e81f8a258" />
+
+### Future ideas
+
+- Different maximum allowed speed for switching ranges depending on if switching from I -> II or II -> I
+- Require a minimum allowed temperature for switching ranges (IRL example: Fendt Vario 700 COM3 - min trans temp 10C)
+Use Control + Shift + m to toggle the tab key moving focus. Alternatively, use esc then tab to move to the next interactive element on the page.
+Attach files by dragging & dropping, selecting or pasting them.
+Editing FS25_varioRangeControl/README.md at main · oneTastyBun/FS25_varioRangeControl

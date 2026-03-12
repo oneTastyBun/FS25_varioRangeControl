@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="106">
     <author>oneTastyBun</author>
-    <version>0.1.5.0-beta</version>
+    <version>0.1.6.0-beta</version>
 
     <title>
         <en>Vario Range Control</en>
@@ -15,7 +15,7 @@ Range I for field work and Range II for transport.
 
 This mod recreates this behaviour by allowing the driver to manually switch ranges.
 
-Vehicles must be configured to support this mod.
+The base game Fendt 300 and 500 Vario tractors have built-in support and work out of the box. Mod vehicles must be configured to support this mod.
 		]]></en>
     </description>
 
@@ -24,8 +24,10 @@ Vehicles must be configured to support this mod.
     <multiplayer supported="true"/>
 
     <extraSourceFiles>
+	    <sourceFile filename="scripts/VarioRangeControl.lua"/>
         <sourceFile filename="scripts/VarioRangeControl_register.lua"/>
 		<sourceFile filename="scripts/VarioRangeControlEvent.lua"/>
+		<sourceFile filename="scripts/VarioRangeControlVehicleConfigs.lua"/>
 		<!-- <sourceFile filename="scripts/VarioRangeControlDebug.lua"/> -->
     </extraSourceFiles>
 

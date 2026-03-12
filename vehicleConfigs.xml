@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<vehicleConfigs>
+
+    <vehicle filename="data/vehicles/fendt/vario500/vario500.xml">
+        <injections>
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges#defaultRange" value="2"/>
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges#shiftSpeedMax" value="2.5"/>
+
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges.range1#maxForwardSpeed" value="28"/>
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges.range1#maxBackwardSpeed" value="17"/>
+
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges.range1#minForwardGearRatio" value="28.2"/>
+        </injections>
+    </vehicle>
+
+    <vehicle filename="data/vehicles/fendt/vario300/vario300.xml">
+        <injections>
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges#defaultRange" value="2"/>
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges#shiftSpeedMax" value="2.5"/>
+
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges.range1#maxForwardSpeed" value="28"/>
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges.range1#maxBackwardSpeed" value="17"/>
+
+            <set path="vehicle.motorized.motorConfigurations.motorConfiguration(0).transmission.varioRanges.range1#minForwardGearRatio" value="28.2"/>
+        </injections>
+    </vehicle>
+	
+</vehicleConfigs>
