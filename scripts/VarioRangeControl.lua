@@ -170,6 +170,11 @@ function VarioRangeControl:onLoad(savegame)
 	-- exit
     if not self.xmlFile:hasProperty(key) then
         self.spec_varioRangeControl = nil
+
+        SpecializationUtil.removeEventListener(self, "onReadStream", VarioRangeControl)
+        SpecializationUtil.removeEventListener(self, "onWriteStream", VarioRangeControl)
+        SpecializationUtil.removeEventListener(self, "onRegisterActionEvents", VarioRangeControl)
+
         return
     end
 	--
@@ -180,6 +185,11 @@ function VarioRangeControl:onLoad(savegame)
 	-- load configuration data from vehicle XML
     if not VarioRangeControl.loadVarioRangesFromXML(self, self.xmlFile, key, spec) then
         self.spec_varioRangeControl = nil
+
+        SpecializationUtil.removeEventListener(self, "onReadStream", VarioRangeControl)
+        SpecializationUtil.removeEventListener(self, "onWriteStream", VarioRangeControl)
+        SpecializationUtil.removeEventListener(self, "onRegisterActionEvents", VarioRangeControl)
+
         return
     end
 
