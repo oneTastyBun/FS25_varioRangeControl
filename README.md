@@ -20,7 +20,8 @@ By default the vehicle must be stopped to switch ranges (as this is how I drive 
 - The currently selected range is indicated on the HUD
 - The last range selected is always set, even after turning the ignition on or off, or saving and loading the game
 - Range switching is only allowed below the configured speed limit (warning shown if exceeded)
-- Configurable XML speed and ratio limits for operating range I
+- Configurable speed and ratio limits for operating range I in XML
+- Dashboard integration
 
 ### Future ideas
 
@@ -32,7 +33,7 @@ By default the vehicle must be stopped to switch ranges (as this is how I drive 
 In the mod vehicle XML file, add a `<varioRanges>` section inside the vehicle `<transmission>`.
 
 ### Full XML format
-Range I can define custom speed limits and ratios. Range II uses the default transmission configuration.
+Range I defines custom speed limits and ratios. Range II uses the existing transmission configuration of the vehicle.
 
 ```xml
 <transmission ...>
@@ -56,25 +57,35 @@ Only the maximum speeds must be defined. All other attributes are optional.
 
 ### Attributes
 
-#### `<varioRanges>`
+Defining gear ratios can be used to mimic IRL behaviour where engine RPM rises noticeably as the tractor approaches the maximum speed of operating range I. They are not required.
 
 | Attribute | Description | Default |
 |----------|-------------|--------|
 | `defaultRange` | Range selected when entering the vehicle the first time | `2` |
 | `shiftSpeedMax` | Maximum vehicle speed where range switching is allowed | `2.5` kph |
-
-#### `<range1>`
-
-Gear ratio limits can be used to mimic real Fendt Vario behaviour, where engine RPM rises noticeably as the tractor approaches the maximum speed of operating range I.
-
-| Attribute | Description | Default |
-|----------|-------------|--------|
 | `maxForwardSpeed` | Maximum forward speed in this range | Required |
 | `maxBackwardSpeed` | Maximum reverse speed in this range | Required |
 | `minForwardGearRatio` | Minimum forward gear ratio | From vehicle transmission |
 | `maxForwardGearRatio` | Maximum forward gear ratio | From vehicle transmission |
 | `minBackwardGearRatio` | Minimum reverse gear ratio | From vehicle transmission |
 | `maxBackwardGearRatio` | Maximum reverse gear ratio | From vehicle transmission |
+
+## Dashboard Integration
+
+| Value Type | Description |
+|-------------|-------------|
+| `varioRangeControl.currentRange` | Numeric value of the active range (1 or 2) |
+| `varioRangeControl.range1Active` | Boolean value that is true when Range I is active |
+| `varioRangeControl.range2Active` | Boolean value that is true when Range II is active |
+
+Example:
+
+```xml
+<dashboard displayType="VISIBILITY" valueType="varioRangeControl.range1Active" node="rangeIconI"/>
+
+<dashboard displayType="VISIBILITY" valueType="varioRangeControl.range2Active" node="rangeIconII"/>
+```
+
 
 ## Screenshot
 

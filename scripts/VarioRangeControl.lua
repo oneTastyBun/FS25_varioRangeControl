@@ -44,6 +44,7 @@ function VarioRangeControl.registerEventListeners(vehicleType)
     SpecializationUtil.registerEventListener(vehicleType, "onPostLoad", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onDelete", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onRegisterActionEvents", VarioRangeControl)
+    SpecializationUtil.registerEventListener(vehicleType, "onRegisterDashboardValueTypes", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onReadStream", VarioRangeControl)
     SpecializationUtil.registerEventListener(vehicleType, "onWriteStream", VarioRangeControl)
 end
@@ -238,8 +239,9 @@ function VarioRangeControl:onReadStream(streamId, connection)
         return
     end
 
-    spec.currentRange = streamReadUIntN(streamId, 2)
-    VarioRangeControl.applyGearRatios(self)
+    local rangeIndex = streamReadUIntN(streamId, 2)
+    self:setVarioRange(rangeIndex)
+    VarioRangeControl.updateActionEventText(self)
 end
 
 function VarioRangeControl:getSpeedLimit(superFunc, onlyIfWorking)
@@ -289,6 +291,10 @@ function VarioRangeControl:setVarioRange(rangeIndex)
 
         -- update motor gear ratio limits for the new range
         VarioRangeControl.applyGearRatios(self)
+
+		-- update dashboard
+        VarioRangeControl.updateDashboardState(self)
+        VarioRangeControl.updateActionEventText(self)
     end
 end
 
@@ -515,3 +521,42 @@ function VarioRangeControl.getActiveMotorConfigurationIndex(self)
 
     return 0
 end
+
+
+-- register custom dashboard valueTypes based on current vario range
+function VarioRangeControl:onRegisterDashboardValueTypes()
+    if self.registerDashboardValueType == nil then
+        return
+    end
+
+    local currentRange = DashboardValueType.new("varioRangeControl", "currentRange")
+    currentRange:setValue(self, "getVarioRange")
+    currentRange:setRange(1, 2)
+    currentRange:setPollUpdate(false)
+    self:registerDashboardValueType(currentRange)
+
+    local range1Active = DashboardValueType.new("varioRangeControl", "range1Active")
+    range1Active:setValue(self, function(vehicle)
+        return vehicle:getVarioRange() == 1
+    end)
+    range1Active:setPollUpdate(false)
+    self:registerDashboardValueType(range1Active)
+
+    local range2Active = DashboardValueType.new("varioRangeControl", "range2Active")
+    range2Active:setValue(self, function(vehicle)
+        return vehicle:getVarioRange() == 2
+    end)
+    range2Active:setPollUpdate(false)
+    self:registerDashboardValueType(range2Active)
+end
+
+function VarioRangeControl.updateDashboardState(self)
+    if self.updateDashboardValueType ~= nil then
+        self:updateDashboardValueType("varioRangeControl.currentRange")
+        self:updateDashboardValueType("varioRangeControl.range1Active")
+        self:updateDashboardValueType("varioRangeControl.range2Active")
+    elseif self.setDashboardsDirty ~= nil then
+        self:setDashboardsDirty()
+    end
+end
+--
