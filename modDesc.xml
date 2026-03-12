@@ -35,15 +35,16 @@ Vario Range Control adds support for Fendt Vario style I / II speed ranges to CV
 
     <l10n>
 		<!-- F1 menu help text -->
-        <text name="input_VARIO_RANGE_I">
-            <en>Change Vario range</en>
-        </text>
-        <text name="input_VARIO_RANGE_II">
-            <en>Change Vario range</en>
-        </text>
+		<text name="action_VARIO_TOGGLE_RANGE">
+			<en>Change Vario range</en>
+		</text>
 		<!-- keybind text -->
 		<text name="input_VARIO_TOGGLE_RANGE">
 			<en>Change Vario operating range</en>
+		</text>
+		<!-- blinking warning -->
+		<text name="warning_VARIO_RANGE_TOO_FAST">
+			<en>Unable to change Vario range: Slow down!</en>
 		</text>
     </l10n>
 </modDesc>

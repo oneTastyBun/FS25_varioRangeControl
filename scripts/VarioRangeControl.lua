@@ -82,8 +82,6 @@ function VarioRangeControl.validatePositiveRatio(self, spec, value, ratioName)
 end
 
 function VarioRangeControl.loadVarioRangesFromXML(self, xmlFile, key, spec)
-	-- todo: instead of doing this, sanitize/validate the XML and throw errors if misconfigured
-	-- todo: testing - try to misconfigure the XML to see if the game crashes
     spec.forwardSpeedRange1  = xmlFile:getValue(key .. ".range1#maxForwardSpeed", 36)
     spec.backwardSpeedRange1 = xmlFile:getValue(key .. ".range1#maxBackwardSpeed", 20)
 	
@@ -232,7 +230,6 @@ function VarioRangeControl:onReadStream(streamId, connection)
 
     spec.currentRange = streamReadUIntN(streamId, 2)
     VarioRangeControl.applyGearRatios(self)
-    VarioRangeControl.updateActionEventText(self)
 end
 
 function VarioRangeControl:getSpeedLimit(superFunc, onlyIfWorking)
@@ -400,21 +397,22 @@ function VarioRangeControl:onRegisterActionEvents(isActiveForInput, isActiveForI
 end
 
 function VarioRangeControl.actionEventToggleRange(self, actionName, inputValue, callbackState, isAnalog)
-    if inputValue == 0 then
-        return
-    end
+	if inputValue == 0 then
+		return
+	end
 
-    -- only allow shift when speed is within allowed range
-    if not VarioRangeControl.canShiftRange(self) then
-        if g_currentMission ~= nil then
-            g_currentMission:showBlinkingWarning("Unable to change Vario range: Slow down!", 2000)
-        end
-        return
-    end
+	-- only allow shift when speed is within allowed range
+	if not VarioRangeControl.canShiftRange(self) then
+		local mission = g_currentMission
+		if mission ~= nil and g_i18n ~= nil then
+			mission:showBlinkingWarning(g_i18n:getText("warning_VARIO_RANGE_TOO_FAST"), 2000)
+		end
+		return
+	end
 
-    local current = self:getVarioRange()
+	local current = self:getVarioRange()
 	local newRange = (current == 1) and 2 or 1
-	
+
 	self:setVarioRange(newRange)
 
 	-- MP - client sends request to server; server broadcasts and applies
@@ -423,28 +421,16 @@ function VarioRangeControl.actionEventToggleRange(self, actionName, inputValue, 
 	else
 		g_client:getServerConnection():sendEvent(VarioRangeControlEvent.new(self, newRange))
 	end
-
-	VarioRangeControl.updateActionEventText(self)
 end
 
 -- display F1 help menu action text
 function VarioRangeControl.updateActionEventText(self)
     local spec = self.spec_varioRangeControl
-    if spec == nil or spec.varioActionEventId == nil then
+    if spec == nil or spec.varioActionEventId == nil or g_i18n == nil then
         return
     end
 
-    local label = (spec.currentRange == 1) and "Range I" or "Range II"
-
-    if g_i18n ~= nil then
-        if spec.currentRange == 1 and g_i18n:hasText("input_VARIO_RANGE_I") then
-            label = g_i18n:getText("input_VARIO_RANGE_I")
-        elseif spec.currentRange == 2 and g_i18n:hasText("input_VARIO_RANGE_II") then
-            label = g_i18n:getText("input_VARIO_RANGE_II")
-        end
-    end
-
-    g_inputBinding:setActionEventText(spec.varioActionEventId, label)
+    g_inputBinding:setActionEventText(spec.varioActionEventId, g_i18n:getText("action_VARIO_TOGGLE_RANGE"))
 end
 --
 
