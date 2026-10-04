@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="106">
     <author>oneTastyBun</author>
-    <version>0.9.0.0</version>
+    <version>0.9.1.0</version>
 
     <title>
         <en>Vario Range Control</en>
@@ -14,6 +14,8 @@ Real Fendt Vario tractors with ML transmissions use two operating ranges:
 Range I for field work and Range II for transport.
 
 This mod recreates this behaviour by allowing the driver to manually switch ranges.
+
+Test build: Range II adds load-dependent transmission losses below 22 km/h.
 
 The base game Fendt 300 and 500 Vario tractors have built-in support and work out of the box. Mod vehicles must be configured to support this mod.
 		]]></en>

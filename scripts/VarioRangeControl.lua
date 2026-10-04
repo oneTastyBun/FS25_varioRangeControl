@@ -6,6 +6,14 @@
 
 VarioRangeControl = {}
 
+-- Relative Range II tractive efficiency, not measured absolute ML efficiency.
+-- Speed is km/h; Range I retains the base game's output.
+VarioRangeControl.ROAD_EFFICIENCY_CURVE = {
+    {0, 0.72}, {5, 0.76}, {8, 0.82}, {12, 0.90},
+    {15, 0.95}, {20, 0.98}, {22, 1.00}
+}
+VarioRangeControl.LOSS_RESPONSE_TIME_MS = 150
+
 function VarioRangeControl.prerequisitesPresent(specializations)
     return SpecializationUtil.hasSpecialization(Motorized, specializations)
 end
@@ -50,6 +58,7 @@ function VarioRangeControl.registerEventListeners(vehicleType)
 end
 
 function VarioRangeControl.registerOverwrittenFunctions(vehicleType)
+    SpecializationUtil.registerOverwrittenFunction(vehicleType, "controlVehicle", VarioRangeControl.controlVehicle)
     SpecializationUtil.registerOverwrittenFunction(vehicleType, "getSpeedLimit", VarioRangeControl.getSpeedLimit)
     SpecializationUtil.registerOverwrittenFunction(vehicleType, "getGearInfoToDisplay", VarioRangeControl.getGearInfoToDisplay)
 end
@@ -196,6 +205,64 @@ function VarioRangeControl:onLoad(savegame)
 
     spec.actionEvents = {}
     spec.varioActionEventId = nil
+    spec.transmissionLossTorque = 0
+end
+
+function VarioRangeControl.getRange2Efficiency(speedKmh)
+    local curve = VarioRangeControl.ROAD_EFFICIENCY_CURVE
+    speedKmh = math.abs(speedKmh)
+    for i = 2, #curve do
+        local upper = curve[i]
+        if speedKmh < upper[1] then
+            local lower = curve[i - 1]
+            local position = (speedKmh - lower[1]) / (upper[1] - lower[1])
+            return lower[2] + (upper[2] - lower[2]) * position
+        end
+    end
+    return curve[#curve][2]
+end
+
+function VarioRangeControl:controlVehicle(superFunc, acceleratorPedal, maxSpeed, maxAcceleration, minMotorRotSpeed, maxMotorRotSpeed, maxMotorRotAcceleration, minGearRatio, maxGearRatio, maxClutchTorque, neededPtoTorque)
+    local spec = self.spec_varioRangeControl
+    local motorizedSpec = self.spec_motorized
+    local motor = motorizedSpec ~= nil and motorizedSpec.motor or nil
+
+    if spec ~= nil then
+        local lossTorque = 0
+        -- WheelsUtil supplies a positive pedal for forward AND reverse propulsion.
+        -- Its neutral/clutch-disengaged call supplies zero pedal and zero ratios.
+        if motor ~= nil and spec.currentRange == 2 and self:getIsMotorStarted()
+            and acceleratorPedal > 0.001 and maxClutchTorque > 0
+            and (minGearRatio ~= 0 or maxGearRatio ~= 0) then
+            local efficiency = VarioRangeControl.getRange2Efficiency(self:getLastSpeed())
+            -- Both getters include the same virtual PTO adjustment, which cancels
+            -- in this subtraction. The remaining torque is wheel-driving torque.
+            local wheelTorque = math.max(motor:getMotorAppliedTorque() - motor:getMotorExternalTorque(), 0)
+            if efficiency < 1 and wheelTorque > 0 then
+                local targetLossTorque = wheelTorque * (1 / efficiency - 1)
+                local dt = math.max(g_physicsDtNonInterpolated or 0, 0)
+                local alpha = 1 - math.exp(-dt / VarioRangeControl.LOSS_RESPONSE_TIME_MS)
+                local previousLoss = spec.transmissionLossTorque or 0
+                lossTorque = previousLoss + (targetLossTorque - previousLoss) * alpha
+            end
+        end
+
+        -- Clear immediately on lift-off, neutral, engine stop, Range I or 22+ km/h.
+        spec.transmissionLossTorque = lossTorque
+        if lossTorque > 0 then
+            local totalExternalTorque = neededPtoTorque + lossTorque
+            -- WheelsUtil sets the PTO factor immediately before this call.
+            -- Preserve virtual PTO demand while counting transmission loss once.
+            local ptoFactor = motor.externalTorqueVirtualMultiplicator
+            motor:setExternalTorqueVirtualMultiplicator(
+                (neededPtoTorque * ptoFactor + lossTorque) / totalExternalTorque)
+            neededPtoTorque = totalExternalTorque
+        end
+    end
+
+    return superFunc(self, acceleratorPedal, maxSpeed, maxAcceleration, minMotorRotSpeed,
+        maxMotorRotSpeed, maxMotorRotAcceleration, minGearRatio, maxGearRatio,
+        maxClutchTorque, neededPtoTorque)
 end
 
 function VarioRangeControl:onPostLoad(savegame)
@@ -288,6 +355,7 @@ function VarioRangeControl:setVarioRange(rangeIndex)
     rangeIndex = math.clamp(math.floor(rangeIndex or 1), 1, 2)
     if spec.currentRange ~= rangeIndex then
         spec.currentRange = rangeIndex
+        spec.transmissionLossTorque = 0
 
         -- update motor gear ratio limits for the new range
         VarioRangeControl.applyGearRatios(self)

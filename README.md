@@ -1,10 +1,10 @@
 # FS25_varioRangeControl
 
-This mod is in a development/testing stage and may contain errors. Please report any issues!
+This mod is in a development / testing stage and may contain errors. Please report any issues!
 
-Real Fendt Vario tractors with the older *ML transmissions* use two operating ranges: **range I for field work and range II for transport**. This Farming Simulator 25 mod recreates that behaviour by allowing the driver to manually switch ranges. This mod builds the feature into the base game Fendt 300/500 Vario tractors. Mod vehicles need XML preparation to function, see XML description below.
+Fendt Vario tractors with the older *ML transmissions* use two operating ranges: **range I for field work and range II for transport**. This mod recreates that behaviour by allowing the driver to manually switch ranges. The ranges are added to the base game Fendt 300/500 Vario tractors. Mod vehicles need XML preparation to function, see XML description below.
 
-Why have I made this? From real life experience driving Fendt Vario tractors with the old ML transmissions, I felt there was something missing in the game. Namely stopping by the edge of the field or before driving up the silage bunker to switch between **operating range I (field)** and **operating range II (road)**, which becomes second nature after a while. I wanted to implement this feature into the game without completely overhauling or redesigning the CVT system, so I made this.
+From real life experience driving Fendt Vario tractors, I felt there was something missing in the game: Stopping by the edge of the field to switch between**operating range II (road)** and  **operating range I (field)**, which becomes second nature after a while. I wanted to implement this feature into the game without completely overhauling or redesigning the CVT system, so I made this.
 
 By default the vehicle must be stopped to switch ranges (as this is how I drive a Vario IRL), but the maximum allowed speed for switching can be configured per vehicle in XML. The keybind (Default: **SHIFT+1**) is a toggle and can be configured in the controls menu like normal.
 
@@ -20,6 +20,7 @@ By default the vehicle must be stopped to switch ranges (as this is how I drive 
 - The last range selected is always set, even after turning the ignition on or off, or saving and loading the game
 - Range switching is only allowed below the configured speed limit (warning shown if exceeded)
 - Configurable speed and ratio limits for operating range I in XML
+- Drivetrain power loss if doing field work in range II
 - Dashboard integration
 
 ## Supported vehicles
